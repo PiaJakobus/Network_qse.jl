@@ -18,4 +18,4 @@ script:
   - julia --project=docs/ docs/make.jl
 
 after_success:
-  - julia -e 'using Pkg; cd(Pkg.dir("network")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'using Pkg; cd(Pkg.dir("Network_qse")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

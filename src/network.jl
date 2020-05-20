@@ -1,4 +1,4 @@
-module network
+module Network_qse
 export foo
 
 foo(x) = 1
