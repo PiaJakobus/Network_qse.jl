@@ -1,0 +1,7 @@
+name = "network"
+uuid = "5f39766f-a033-457a-b69d-b9a3f0b2cbdc"
+authors = ["Pia Jakobus <pia.jakobus@monash.edu>"]
+version = "0.1.0"
+
+[deps]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
