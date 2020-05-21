@@ -1,6 +1,12 @@
 using Test
-using Network_qse
+#using Network_qse
+#include("../src/Io.jl")
 
+@testset "first_try" begin
+    @test 1==1
+    @test foo(1) == 1
+end
 
-@test 1==1
-@test foo(1) == 1
+@testset "io" begin
+    @test isa(read_table(), Array{String})
+end
