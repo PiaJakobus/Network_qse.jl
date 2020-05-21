@@ -1,6 +1,5 @@
 using Test
-#using Network_qse
-#include("../src/Io.jl")
+using Network_qse
 
 @testset "first_try" begin
     @test 1==1
