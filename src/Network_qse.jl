@@ -1,13 +1,14 @@
 module Network_qse
-
-export foo
-
 using CSV
 using DelimitedFiles
 using DataFrames
+export mass
+#include("Io.jl")
 
-foo(x) = 1
 
-include("Io.jl")
+
+function mass()
+    return 1
+end
 
 end
