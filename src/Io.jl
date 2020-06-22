@@ -1,5 +1,6 @@
 export read_part_frdm
 export read_mass_frdm
+export extract_partition_function
 f = "tables/part_frdm.asc"
 # https://docs.julialang.org/en/v1/manual/networking-and-streams/
 
@@ -23,8 +24,8 @@ function read_part_frdm()
     G_mod = map(n->G_res[1+3*n:3+3*n], [0:floor(Int, length(G_res)/3)-1;])
 
     data_arr = permutedims(reshape(hcat(data_res...), (length(data_res[1]), length(data_res))))
-    part_arr = permutedims(reshape(hcat(G_mod...), (length(G_mod[1]), length(G_mod))))
-    return data_res, G_mod
+    part_arr = reshape(hcat(G_mod...), (length(G_mod[1]), length(G_mod)))
+    return data_arr, part_arr
 end
 
 
@@ -41,5 +42,37 @@ function read_mass_frdm()
     k4 = map(i->k3[i][1:4], [1:length(k3);])
     k4_arr = permutedims(reshape(hcat(k4...), (length(k4[1]), length(k4))))
 
-    return k4
+    return k4_arr
 end
+
+d1 = read_mass_frdm()
+d2, g = read_part_frdm()
+m_charge_number = d1[:,1]
+m_atomic_number = d1[:,2]
+p_charge_number = d2[:,1]
+p_atomic_number = d2[:,2]
+m_zz_aa = d1[:,[1,2]]
+p_zz_aa = d2[:,[1,2]]
+
+
+function extract_partition_function()
+    fpart = Array{Array{Float64,1},1}[]
+    atomic_number = Vector{Float64}()
+    charge_number = Vector{Float64}()
+    for i in eachindex(m_charge_number)
+        for j in eachindex(p_charge_number)
+            if (m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])
+                push!(fpart, g[:,j])
+                push!(atomic_number, m_atomic_number[i])
+                push!(charge_number, m_charge_number[i])
+            end
+        end
+    end
+    #f_part = reshape(hcat(fpart[1]...), (length(fpart[1][1]), length(fpart[1])))
+    return fpart, atomic_number, charge_number
+end
+
+
+
+
+#A_in_p = in.(i,p_charge_number)
