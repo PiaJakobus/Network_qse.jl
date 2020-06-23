@@ -54,25 +54,33 @@ p_atomic_number = d2[:,2]
 m_zz_aa = d1[:,[1,2]]
 p_zz_aa = d2[:,[1,2]]
 
+function read_species()
+    string = open("tables/species.txt", "r") do f
+        readlines(f)
+    end
+    number_species = parse(Int,string[1])
+    splitting = split.(string, "\n")
+    deleteat!(splitting, [1])
+    k = vcat(map(x->split.(splitting[x], " "), [1:length(splitting);])...)
+    k1 = map(n->tryparse.(Float64,k[n]), [1:length(k);])
+    k2 = map.(i-> filter!(x->x≠nothing,k1[i]), [1:length(k1);])
+    k3 = map(x->identity.(k2[x]), [1:length(k2);])
+    k4 = permutedims(hcat(k3...))
+    return k4, number_species
+end
 
 function extract_partition_function()
-    fpart = Array{Array{Float64,1},1}[]
+    fpart = Array{Float64,2}[]
     atomic_number = Vector{Float64}()
     charge_number = Vector{Float64}()
     for i in eachindex(m_charge_number)
         for j in eachindex(p_charge_number)
             if (m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])
-                push!(fpart, g[:,j])
+                push!(fpart, transpose(reshape(hcat(g[:,j]...), (length(g[:,j][1]), length(g[:,1])))))
                 push!(atomic_number, m_atomic_number[i])
                 push!(charge_number, m_charge_number[i])
             end
         end
     end
-    #f_part = reshape(hcat(fpart[1]...), (length(fpart[1][1]), length(fpart[1])))
     return fpart, atomic_number, charge_number
 end
-
-
-
-
-#A_in_p = in.(i,p_charge_number)
