@@ -37,9 +37,9 @@ function initial_partition_function(ρ,T)
     ω₁ = permutedims(hcat(map.(x -> ω[x][1, 1], [1:npart])...))
     ω₂ = permutedims(hcat(map.(x -> ω[x][1, 2], [1:npart])...))
     fp₀ = (ω₁ * scr2  .+ ω₂ * scr3).*(2.0*s .+ 1.0)
-    scr1 = .√(2.0*π*k_B*(A*const_m_B .+ masses[3]*const_kmev/const_c^2)/const_hh.^2).^3
-    binding_energy =  masses[3] - Z*masses[3][2] + N*masses[3][1]
-    f₀ = fp₀ * scr1 * A / n_B
+    scr1 = .√(2.0*π*const_k_B*(A*const_m_B .+ m*const_kmev/const_c^2)/const_hh.^2).^3
+    binding_energy =  m - Z*m[2] + N*m[1]
+    f₀ = fp₀ .* scr1 .* A / n_B
     return f₀
 end
 
