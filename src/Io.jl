@@ -49,6 +49,8 @@ d1 = read_mass_frdm()
 d2, g = read_part_frdm()
 m_charge_number = d1[:,1]
 m_atomic_number = d1[:,2]
+m_mass          = d1[:,3]
+m_spin          = d1[:,4]
 p_charge_number = d2[:,1]
 p_atomic_number = d2[:,2]
 m_zz_aa = d1[:,[1,2]]
@@ -70,17 +72,21 @@ function read_species()
 end
 
 function extract_partition_function()
-    fpart = Array{Float64,2}[]
+    fpart         = Array{Float64,2}[]
     atomic_number = Vector{Float64}()
     charge_number = Vector{Float64}()
+    spin          = Vector{Float64}()
+    mass          = Vector{Float64}()
     for i in eachindex(m_charge_number)
         for j in eachindex(p_charge_number)
             if (m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])
                 push!(fpart, transpose(reshape(hcat(g[:,j]...), (length(g[:,j][1]), length(g[:,1])))))
                 push!(atomic_number, m_atomic_number[i])
                 push!(charge_number, m_charge_number[i])
+                push!(spin, m_spin[i])
+                push!(mass, m_mass[i])
             end
         end
     end
-    return fpart, atomic_number, charge_number
+    return fpart, atomic_number, charge_number, spin, mass
 end
