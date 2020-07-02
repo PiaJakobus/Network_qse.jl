@@ -5,7 +5,7 @@ f = "tables/part_frdm.asc"
 # https://docs.julialang.org/en/v1/manual/networking-and-streams/
 
 export initial_partition_function
-
+export findnearest
 
 function read_part_frdm()
     table_string = open("tables/part_frdm.asc", "r") do f
@@ -107,6 +107,7 @@ const_k_B = 1.380658e-16
 const_c = 2.99792458e10
 const_h_barc = 197.327e-13
 const_hh = const_h_barc / const_c * 2.0 * π * const_meverg
+data_T = Float64[0.01, 0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10]
 
 function initial_partition_function(ρ,T)
     n_B = 1.0/const_m_B
@@ -118,16 +119,58 @@ function initial_partition_function(ρ,T)
     s = G[4]
     m = G[5]
     N = A - Z
-    scr3 = 1.0
-    scr2 = 1.0
 
-    ω₁ = permutedims(hcat(map.(x -> ω[x][1, 1], [1:npart])...))
-    ω₂ = permutedims(hcat(map.(x -> ω[x][1, 2], [1:npart])...))
+    i = findnearest(data_T, T)[1]
+    i_2d = Int8[ceil(i/8), i%8]
+    i_2d2 = Int8[ceil((i+1)/8), (i+1)%8]
+    if i in [1:length(data_T);]
+        scr2 = 1.0 - (log(T) - log(data_T[i]))/(log(data_T[i+1]) - log(data_T[i]))
+        println("scr2: ", scr2)
+    else
+        return "stop"
+    end
+    scr3 = 1.0
+    ω₁ = permutedims(hcat(map.(x -> ω[x][i_2d[1], i_2d[2]], [1:npart])...))
+    ω₂ = permutedims(hcat(map.(x -> ω[x][i_2d2[1], i_2d2[2]], [1:npart])...))
     fp₀ = (ω₁ * scr2  .+ ω₂ * scr3) .* transpose(2.0.*s .+ 1.0)
     scr1 = .√(2.0*π*const_k_B*(A*const_m_B .+ m*const_kmev/const_c^2)/const_hh.^2).^3
     binding_energy =  m - Z*m[2] + N*m[1]
     f₀ = fp₀ .* transpose(scr1) .* transpose(A) / n_B
-    return vcat(f₀...)
+    return ω₁ #vcat(f₀...)
 end
 
 test = initial_partition_function(1,1)
+
+
+
+function findnearest(a,x)
+       n = length(a)
+       n > 0 || return 0:-1
+       i1 = searchsortedlast(a,x)
+       i0 = i1
+       if i1>0
+           while i0>1 && a[i0-1]==a[i0]
+               i0 -= 1
+           end
+           d = x-a[i1]
+       else
+           i0 = i1+1
+           d = a[i1+1]-x
+       end
+       i2 = i1
+       if i2<n && a[i2+1]-x<d
+           i0 = i2+1
+           d = a[i2+1]-x
+           i2 += 1
+       end
+       while i2<n && a[i2+1]-x==d
+           i2 += 1
+       end
+       return i0:i2
+end
+
+
+
+
+
+findnearest(data_T, 6)
