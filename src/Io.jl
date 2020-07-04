@@ -1,4 +1,55 @@
+"""
+read in follwing files:
+----------------
+mass-frdm95.dat:
+----------------
+Ground state properties
+based on the FRDM model
+Format
+------
+Each record of the file contains:
 
+   Z    : charge number
+   A    : mass number
+   El   : element symbol
+   fl   : flag corresponding to 0 if no experimental data available
+                                1 for a mass excess recommended by
+                                  Audi&Wapstra (1995)
+                                2 for a measured mass from
+                                  Audi&Wapstra (1995)
+   Mexp : experimental or recommended atomic mass excess in MeV of
+          Audi&Wapstra (1995)
+   Mth  : calculated FRDM atomic mass excess in MeV
+   Emic : calculated FRDM microscopic energy in MeV
+   beta2: calculated quadrupole deformation of the nuclear ground-state
+   beta3: calculated octupole deformation of the nuclear ground-state
+   beta4: calculated hexadecapole deformation of the nuclear ground-state
+   beta6: calculated hexacontatetrapole deformation of the nuclear
+          ground-state
+
+The corresponding FORTRAN format is (2i4,1x,a2,1x,i1,3f10.3,4f8.3)
+
+----------------
+part_frdm.asc:
+----------------
+Each of the two files starts with 4 header lines briefly
+summarizing the contents of the given columns. This is followed by
+entries sorted by charge and mass number of the isotope. Each
+table ends with the line "END OF TABLE".
+Each entry consists of 5 lines:
+1. Isotope (in standard notation);
+2. Charge number of isotope, mass number of isotope, ground state
+   spin of the isotope;
+3-5. Partition functions normalized to the g.s. spin;
+   Third line: Partition functions for the  temperatures (in 10^9 K):
+   0.01, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7;
+       Fourth line:  Partition functions for the temperatures (in 10^9 K):
+   0.8, 0.9, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5;
+       Fifth line: Partition functions for the temperatures (in 10^9 K):
+   4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 .
+Information for the next isotope starts after the last partition
+function line.
+"""
 
 function read_part_frdm()
     table_string = open("$(@__DIR__)/../tables/part_frdm.asc", "r") do f
@@ -7,17 +58,17 @@ function read_part_frdm()
     str_f = split.(table_string, "\n")
     deleteat!(str_f, [1:4;])
     data_string = str_f[2:5:length(str_f)]
-    data_substring = map(x->split.(data_string[x], " "), [1:length(data_string);])
-    data_union = map(i->map(n->tryparse.(Float64,data_substring[i][n]), [1:length(data_substring[1]);]), [1:length(data_substring);])
+    data_substring = map(x->split.(data_string[x], " "), 1:length(data_string))
+    data_union = map(i->map(n->tryparse.(Float64,data_substring[i][n]), 1:length(data_substring[1])), 1:length(data_substring))
     data_union1 = map.(i-> filter!(k->k≠nothing,data_union[i][1]), [1:length(data_union);])
     data_res = map(x->identity.(data_union1[x]), [1:length(data_union1);])
 
-    G_string = vcat(map(n-> str_f[3+5*n:5+5*n], [0:floor(Int, length(str_f)/5)-1;])...)
-    G_substring = vcat(map(x->split.(vcat(G_string[x]), " "), [1:length(G_string);])...)
-    G_union = map(n->tryparse.(Float64,G_substring[n]), [1:length(G_substring);])
-    G_union1 = map(y->filter!(x->x≠nothing,G_union[y]), [1:length(G_union);])
-    G_res = map(x->identity.(G_union1[x]), [1:length(G_union1);])
-    G_mod = map(n->G_res[1+3*n:3+3*n], [0:floor(Int, length(G_res)/3)-1;])
+    G_string = vcat(map(n-> str_f[3+5*n:5+5*n], 0:floor(Int, length(str_f)/5)-1)...)
+    G_substring = vcat(map(x->split.(vcat(G_string[x]), " "), 1:length(G_string))...)
+    G_union = map(n->tryparse.(Float64,G_substring[n]), 1:length(G_substring))
+    G_union1 = map(y->filter!(x->x≠nothing,G_union[y]), 1:length(G_union))
+    G_res = map(x->identity.(G_union1[x]), 1:length(G_union1))
+    G_mod = map(n->G_res[1+3*n:3+3*n], 0:floor(Int, length(G_res)/3)-1)
 
     data_arr = permutedims(reshape(hcat(data_res...), (length(data_res[1]), length(data_res))))
     part_arr = reshape(hcat(G_mod...), (length(G_mod[1]), length(G_mod)))
@@ -31,11 +82,11 @@ function read_mass_frdm()
     end
     b = split.(table_string, "\n")
     deleteat!(b, [1:4;])
-    k = vcat(map(x->split.(b[x], " "), [1:length(b);])...)
-    k1 = map(n->tryparse.(Float64,k[n]), [1:length(k);])
-    k2 = map.(i-> filter!(x->x≠nothing,k1[i]), [1:length(k1);])
-    k3 = map(x->identity.(k2[x]), [1:length(k2);])
-    k4 = map(i->k3[i][1:4], [1:length(k3);])
+    k = vcat(map(x->split.(b[x], " "), 1:length(b))...)
+    k1 = map(n->tryparse.(Float64,k[n]), 1:length(k))
+    k2 = map.(i-> filter!(x->x≠nothing,k1[i]), 1:length(k1))
+    k3 = map(x->identity.(k2[x]), 1:length(k2))
+    k4 = map(i->k3[i][1:4], 1:length(k3))
     k4_arr = permutedims(reshape(hcat(k4...), (length(k4[1]), length(k4))))
 
     return k4_arr
@@ -86,98 +137,3 @@ function extract_partition_function()
     end
     return fpart, atomic_number, charge_number, spin, mass
 end
-
-
-
-G = extract_partition_function()
-npart = length(G[1])
-masses = read_mass_frdm()
-nmass = length(masses[:,1])
-const_m_B = 1.66e-24 # baryon mass
-const_kmev = 8.61829e-11
-const_meverg = 1.602e-6
-const_k_B = 1.380658e-16
-const_c = 2.99792458e10
-const_h_barc = 197.327e-13
-const_hh = const_h_barc / const_c * 2.0 * π * const_meverg
-data_T = Float64[0.01, 0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10]
-
-function initial_partition_function()
-    """
-            out: prefactor of X_i, using Boltzman stat.
-            http://cococubed.asu.edu/code_pages/nse.shtml
-            no interpolation, no ρ
-                 prefac  = A*ω*λ⁻³
-                 E_b = m - Z * mₚ - N * mₙ
-            degeneracy gᵢ in ωᵢ = 2J(Zᵢ, Aᵢ, Eᵢ) + 1
-    """
-
-    n_B = 1.0/const_m_B
-    β   = 1.0/(const_kmev * 1.0)
-    scr3 = 1. # seems odd in code, not set..later sum(x_i)
-    ω,A,Z,s,m = G[1:5] # careful dimensions G[1] isa 3 x 8 matrix
-    N = A - Z
-    root_T⁻¹ = .√(1.0./data_T)
-    #i = findnearest(data_T, T)[1]
-    #i_1 = Int8[ceil(i/8), i%8] # map i∈[1..n*m] to [n,m]
-    fp₀ = map(x->ω[x]*(2.0*s[x]+1.0), [1:length(s);])
-    λ₀ = .√const_hh^2/(2.0*π*const_k_B*(A*const_m_B .+ m*const_kmev/const_c^2))
-    λ = root_T⁻¹*λ₀
-    E_b =  m - Z*m[2] + N*m[1]
-    prefac = map(i->(A[i]*fp₀[i]*λ[i].^3.0)/n_B, 1:length(fp₀))
-    return prefac
-end
-
-test = initial_partition_function()
-
-function parition_function()
-    """
-            non-interacting ideal gases,
-            see Saha equation, using BS
-            E_binding required as input, see
-            Finite Range Droplet Model (FRDM)
-
-            G(Z,A,T) = ∑ᵢ gᵢ(Zᵢ,Aᵢ) exp(-Eᵢ/kT)
-    """
-end
-
-function findnearest(a,x)
-       n = length(a)
-       n > 0 || return 0:-1
-       i1 = searchsortedlast(a,x)
-       i0 = i1
-       if i1>0
-           while i0>1 && a[i0-1]==a[i0]
-               i0 -= 1
-           end
-           d = x-a[i1]
-       else
-           i0 = i1+1
-           d = a[i1+1]-x
-       end
-       i2 = i1
-       if i2<n && a[i2+1]-x<d
-           i0 = i2+1
-           d = a[i2+1]-x
-           i2 += 1
-       end
-       while i2<n && a[i2+1]-x==d
-           i2 += 1
-       end
-       return i0:i2
-end
-
-function linear_interpolation(xₐᵣᵣ, yₐᵣᵣ, x)
-    """
-    forward interpolation
-    xₐᵣᵣ = [xᵢ,xᵢ₊₁]
-    yₐᵣᵣ = [yᵢ,yᵢ₊₁]
-    """
-    y⁺ = yₐᵣᵣ[1] + (x - xₐᵣᵣ[1])*(yₐᵣᵣ[2] - yₐᵣᵣ[1])/(xₐᵣᵣ[2] - xₐᵣᵣ[1])
-    return y⁺
-end
-
-
-
-
-findnearest(data_T, 6)
