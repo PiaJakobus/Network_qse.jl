@@ -6,6 +6,7 @@ f = "tables/part_frdm.asc"
 
 export initial_partition_function
 export findnearest
+export linear_interpolation
 
 function read_part_frdm()
     table_string = open("tables/part_frdm.asc", "r") do f
@@ -109,39 +110,44 @@ const_h_barc = 197.327e-13
 const_hh = const_h_barc / const_c * 2.0 * π * const_meverg
 data_T = Float64[0.01, 0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10]
 
-function initial_partition_function(ρ,T)
+function initial_partition_function()
+    """
+            out: prefactor of X_i, using Boltzman stat.
+            http://cococubed.asu.edu/code_pages/nse.shtml
+            no interpolation, no ρ
+                 prefac  = A*ω*λ⁻³
+                 E_b = m - Z * mₚ - N * mₙ
+            degeneracy gᵢ in ωᵢ = 2J(Zᵢ, Aᵢ, Eᵢ) + 1
+    """
+
     n_B = 1.0/const_m_B
     β   = 1.0/(const_kmev * 1.0)
     scr3 = 1. # seems odd in code, not set..later sum(x_i)
-    ω = G[1] # careful dimensions 3 x 8 matrix
-    A = G[2]
-    Z = G[3]
-    s = G[4]
-    m = G[5]
+    ω,A,Z,s,m = G[1:5] # careful dimensions G[1] isa 3 x 8 matrix
     N = A - Z
-
-    i = findnearest(data_T, T)[1]
-    i_2d = Int8[ceil(i/8), i%8]
-    i_2d2 = Int8[ceil((i+1)/8), (i+1)%8]
-    if i in [1:length(data_T);]
-        scr2 = 1.0 - (log(T) - log(data_T[i]))/(log(data_T[i+1]) - log(data_T[i]))
-        println("scr2: ", scr2)
-    else
-        return "stop"
-    end
-    scr3 = 1.0
-    ω₁ = permutedims(hcat(map.(x -> ω[x][i_2d[1], i_2d[2]], [1:npart])...))
-    ω₂ = permutedims(hcat(map.(x -> ω[x][i_2d2[1], i_2d2[2]], [1:npart])...))
-    fp₀ = (ω₁ * scr2  .+ ω₂ * scr3) .* transpose(2.0.*s .+ 1.0)
-    scr1 = .√(2.0*π*const_k_B*(A*const_m_B .+ m*const_kmev/const_c^2)/const_hh.^2).^3
-    binding_energy =  m - Z*m[2] + N*m[1]
-    f₀ = fp₀ .* transpose(scr1) .* transpose(A) / n_B
-    return ω₁ #vcat(f₀...)
+    root_T⁻¹ = .√(1.0./data_T)
+    #i = findnearest(data_T, T)[1]
+    #i_1 = Int8[ceil(i/8), i%8] # map i∈[1..n*m] to [n,m]
+    fp₀ = map(x->ω[x]*(2.0*s[x]+1.0), [1:length(s);])
+    λ₀ = .√const_hh^2/(2.0*π*const_k_B*(A*const_m_B .+ m*const_kmev/const_c^2))
+    λ = root_T⁻¹*λ₀
+    E_b =  m - Z*m[2] + N*m[1]
+    prefac = map(i->(A[i]*fp₀[i]*λ[i].^3.0)/n_B, [1:length(fp₀);])
+    return prefac
 end
 
-test = initial_partition_function(1,1)
+test = initial_partition_function()
 
+function parition_function()
+    """
+            non-interacting ideal gases,
+            see Saha equation, using BS
+            E_binding required as input, see
+            Finite Range Droplet Model (FRDM)
 
+            G(Z,A,T) = ∑ᵢ gᵢ(Zᵢ,Aᵢ) exp(-Eᵢ/kT)
+    """
+end
 
 function findnearest(a,x)
        n = length(a)
@@ -169,6 +175,15 @@ function findnearest(a,x)
        return i0:i2
 end
 
+function linear_interpolation(xₐᵣᵣ, yₐᵣᵣ, x)
+    """
+    forward interpolation
+    xₐᵣᵣ = [xᵢ,xᵢ₊₁]
+    yₐᵣᵣ = [yᵢ,yᵢ₊₁]
+    """
+    y⁺ = yₐᵣᵣ[1] + (x - xₐᵣᵣ[1])*(yₐᵣᵣ[2] - yₐᵣᵣ[1])/(xₐᵣᵣ[2] - xₐᵣᵣ[1])
+    return y⁺
+end
 
 
 

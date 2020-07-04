@@ -32,7 +32,7 @@ function initial_partition_function(ρ,T)
     m = G[5]
     N = A - Z
     scr3 = 1.0
-    scr2 = 1.0
+    scr2 = findnearest(data_T, T)
 
     ω₁ = permutedims(hcat(map.(x -> ω[x][1, 1], [1:npart])...))
     ω₂ = permutedims(hcat(map.(x -> ω[x][1, 2], [1:npart])...))
@@ -44,4 +44,8 @@ function initial_partition_function(ρ,T)
 end
 
 initial_partition_function(1,1)
+
+
+
+
 end
