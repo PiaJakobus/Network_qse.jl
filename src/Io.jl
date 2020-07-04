@@ -1,15 +1,7 @@
-export read_part_frdm
-export read_mass_frdm
-export extract_partition_function
-f = "tables/part_frdm.asc"
-# https://docs.julialang.org/en/v1/manual/networking-and-streams/
 
-export initial_partition_function
-export findnearest
-export linear_interpolation
 
 function read_part_frdm()
-    table_string = open("tables/part_frdm.asc", "r") do f
+    table_string = open("$(@__DIR__)/../tables/part_frdm.asc", "r") do f
         readlines(f)
     end
     str_f = split.(table_string, "\n")
@@ -34,7 +26,7 @@ end
 
 
 function read_mass_frdm()
-    table_string = open("tables/mass-frdm95.dat", "r") do f
+    table_string = open("$(@__DIR__)/../tables/mass-frdm95.dat", "r") do f
         readlines(f)
     end
     b = split.(table_string, "\n")
@@ -61,7 +53,7 @@ m_zz_aa = d1[:,[1,2]]
 p_zz_aa = d2[:,[1,2]]
 
 function read_species()
-    string = open("tables/species.txt", "r") do f
+    string = open("$(@__DIR__)/../tables/species.txt", "r") do f
         readlines(f)
     end
     number_species = parse(Int,string[1])
@@ -132,7 +124,7 @@ function initial_partition_function()
     λ₀ = .√const_hh^2/(2.0*π*const_k_B*(A*const_m_B .+ m*const_kmev/const_c^2))
     λ = root_T⁻¹*λ₀
     E_b =  m - Z*m[2] + N*m[1]
-    prefac = map(i->(A[i]*fp₀[i]*λ[i].^3.0)/n_B, [1:length(fp₀);])
+    prefac = map(i->(A[i]*fp₀[i]*λ[i].^3.0)/n_B, 1:length(fp₀))
     return prefac
 end
 
