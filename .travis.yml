@@ -13,7 +13,7 @@ julia:
 codecov: true
 
 script:
-  - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.add("Documenter"); Pkg.add("CSV");
+  - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.add("Documenter"); Pkg.add("CSV"); Pkg.add("DataFrames"); Pkg.add("DelimitedFiles")
                                   Pkg.instantiate()'
   - julia --project=docs/ docs/make.jl
 
