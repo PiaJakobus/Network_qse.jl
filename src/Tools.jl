@@ -24,6 +24,9 @@ function findnearest(a,x)
        return i0:i2
 end
 
+searchsortedlast([2,3.1,6],3)
+# https://docs.julialang.org/en/v1/base/sort/
+
 function linear_interpolation(xₐᵣᵣ, yₐᵣᵣ, x)
     """
     forward interpolation

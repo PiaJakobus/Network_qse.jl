@@ -58,21 +58,21 @@ function read_part_frdm()
     str_f = split.(table_string, "\n")
     deleteat!(str_f, [1:4;])
     data_string = str_f[2:5:length(str_f)]
-    data_substring = map(x->split.(data_string[x], " "), 1:length(data_string))
-    data_union = map(i->map(n->tryparse.(Float64,data_substring[i][n]), 1:length(data_substring[1])), 1:length(data_substring))
-    data_union1 = map.(i-> filter!(k->k≠nothing,data_union[i][1]), [1:length(data_union);])
-    data_res = map(x->identity.(data_union1[x]), [1:length(data_union1);])
+
+    k = vcat(map(x->split.(x, " "), data_string)...)
+    k1 = map.(j-> filter!(i -> i != "", k[j]), 1:length(k))
+    k2 = map(n->tryparse.(Float64,n), k1)
+    k3 = permutedims(hcat(k2...))
 
     G_string = vcat(map(n-> str_f[3+5*n:5+5*n], 0:floor(Int, length(str_f)/5)-1)...)
-    G_substring = vcat(map(x->split.(vcat(G_string[x]), " "), 1:length(G_string))...)
-    G_union = map(n->tryparse.(Float64,G_substring[n]), 1:length(G_substring))
-    G_union1 = map(y->filter!(x->x≠nothing,G_union[y]), 1:length(G_union))
-    G_res = map(x->identity.(G_union1[x]), 1:length(G_union1))
-    G_mod = map(n->G_res[1+3*n:3+3*n], 0:floor(Int, length(G_res)/3)-1)
+    G_substring = vcat(map(x->split.(x, " "), G_string)...)
+    G1 = map.(j -> filter!(i -> i != "", G_substring[j]), 1:length(G_substring))
+    G2 = map(n->tryparse.(Float64,n), G1)
+    G3 = permutedims(hcat(G2...))
+    G4 = map(n->G3[1+3*n:3+3*n, 1:8], 0:floor(Int, size(G3)[1]/3)-1)
+    G5 = map(x -> hcat(transpose(x)...), G4)
 
-    data_arr = permutedims(reshape(hcat(data_res...), (length(data_res[1]), length(data_res))))
-    part_arr = reshape(hcat(G_mod...), (length(G_mod[1]), length(G_mod)))
-    return data_arr, part_arr
+    return k3, G5
 end
 
 
@@ -82,18 +82,22 @@ function read_mass_frdm()
     end
     b = split.(table_string, "\n")
     deleteat!(b, [1:4;])
-    k = vcat(map(x->split.(b[x], " "), 1:length(b))...)
-    k1 = map(n->tryparse.(Float64,k[n]), 1:length(k))
-    k2 = map.(i-> filter!(x->x≠nothing,k1[i]), 1:length(k1))
-    k3 = map(x->identity.(k2[x]), 1:length(k2))
-    k4 = map(i->k3[i][1:4], 1:length(k3))
-    k4_arr = permutedims(reshape(hcat(k4...), (length(k4[1]), length(k4))))
-
+    k = vcat(map(x->split.(x, " "), b)...)
+    k1 = map.(j-> filter!(i -> i != "", k[j]), 1:length(k))
+    k2 = map(i->deleteat!(i, 3), k1)
+    k3 = map(n->tryparse.(Float64,n), k2)
+    k4 = map(x->x[1:4], k3)
+    k4_arr = permutedims(hcat(k4...))
     return k4_arr
 end
 
+a = read_mass_frdm()
+
+
+
 d1 = read_mass_frdm()
 d2, g = read_part_frdm()
+g = G5
 m_charge_number = d1[:,1]
 m_atomic_number = d1[:,2]
 m_mass          = d1[:,3]
@@ -103,23 +107,31 @@ p_atomic_number = d2[:,2]
 m_zz_aa = d1[:,[1,2]]
 p_zz_aa = d2[:,[1,2]]
 
+
+
+
 function read_species()
-    string = open("$(@__DIR__)/../tables/species.txt", "r") do f
+    strings = open("$(@__DIR__)/../tables/species.txt", "r") do f
         readlines(f)
     end
-    number_species = parse(Int,string[1])
-    splitting = split.(string, "\n")
+    number_species = parse(Int,strings[1])
+    splitting = split.(strings, "\n")
     deleteat!(splitting, [1])
-    k = vcat(map(x->split.(splitting[x], " "), [1:length(splitting);])...)
-    k1 = map(n->tryparse.(Float64,k[n]), [1:length(k);])
-    k2 = map.(i-> filter!(x->x≠nothing,k1[i]), [1:length(k1);])
-    k3 = map(x->identity.(k2[x]), [1:length(k2);])
+    k = vcat(map(x->split.(x, " "), splitting)...)
+    k1 = map.(j-> filter!(i -> i != "", k[j]), 1:length(k))
+    k2 = map(i->deleteat!(i, 1), k1)
+    k3 = map(n->tryparse.(Float64,n), k2)
     k4 = permutedims(hcat(k3...))
     return k4, number_species
 end
 
+
+
+
+
 function extract_partition_function()
     fpart         = Array{Float64,2}[]
+    #fpart         = Vector{Float64}()
     atomic_number = Vector{Float64}()
     charge_number = Vector{Float64}()
     spin          = Vector{Float64}()
@@ -127,7 +139,8 @@ function extract_partition_function()
     for i in eachindex(m_charge_number)
         for j in eachindex(p_charge_number)
             if (m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])
-                push!(fpart, transpose(reshape(hcat(g[:,j]...), (length(g[:,j][1]), length(g[:,1])))))
+                #push!(fpart, transpose(reshape(hcat(g[:,j]...), (length(g[:,j][1]), length(g[:,1])))))
+                push!(fpart, g[j])
                 push!(atomic_number, m_atomic_number[i])
                 push!(charge_number, m_charge_number[i])
                 push!(spin, m_spin[i])
