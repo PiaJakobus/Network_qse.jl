@@ -27,12 +27,27 @@ end
 searchsortedlast([2,3.1,6],3)
 # https://docs.julialang.org/en/v1/base/sort/
 
-function linear_interpolation(xₐᵣᵣ, yₐᵣᵣ, x)
-    """
-    forward interpolation
-    xₐᵣᵣ = [xᵢ,xᵢ₊₁]
-    yₐᵣᵣ = [yᵢ,yᵢ₊₁]
-    """
+
+
+"""
+    linear_interpolation(xₐᵣᵣ,yₐᵣᵣ,x)
+find f(x) asuming f(x) = x, x∈[xᵢ,xᵢ₊₁]
+xₐᵣᵣ = [xᵢ,xᵢ₊₁]
+yₐᵣᵣ = [yᵢ,yᵢ₊₁]
+"""
+function linear_interpolation(xₐᵣᵣ::Array{Float64}, yₐᵣᵣ::Array{Float64}, x::Float64)
     y⁺ = yₐᵣᵣ[1] + (x - xₐᵣᵣ[1])*(yₐᵣᵣ[2] - yₐᵣᵣ[1])/(xₐᵣᵣ[2] - xₐᵣᵣ[1])
     return y⁺
+end
+
+"""
+    Multivariate Newton raphson()
+[xⁱ⁺¹₁..xⁱ⁺¹ₙ] = [xⁱ₁..xⁱₙ] - J⁻¹[f¹(xⁱ₁)..fⁿ(xⁱₙ)]
+"""
+function my_newton_raphson(μ::Array{Float64},T::Float64,ρ::Float64)
+    # calculate Hessian 2x2
+    # [df[1]/dmun df[1]/dmup; df[2]/dumun df[2]/dmup]
+    # J^-1 = 1/(ad-bc) * [d -b; -c a]
+    # [mun,mup]' = [mun,mup] - J^-1 * f(mun,mup)
+    return 1
 end
