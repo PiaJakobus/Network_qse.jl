@@ -40,14 +40,38 @@ function linear_interpolation(xₐᵣᵣ::Array{Float64}, yₐᵣᵣ::Array{Floa
     return y⁺
 end
 
+
+
 """
     Multivariate Newton raphson()
 [xⁱ⁺¹₁..xⁱ⁺¹ₙ] = [xⁱ₁..xⁱₙ] - J⁻¹[f¹(xⁱ₁)..fⁿ(xⁱₙ)]
+specificly:
+calculate Hessian 2x2
+[df[1]/dmun df[1]/dmup; df[2]/dumun df[2]/dmup]
+J^-1 = 1/(ad-bc) * [d -b; -c a]
+[mun,mup]' = [mun,mup] - J^-1 * f(mun,mup)
+dXdμₙ   dXdμₚ
+dYₑdμₙ  dYₑdμₚ
 """
 function my_newton_raphson(μ::Array{Float64},T::Float64,ρ::Float64)
-    # calculate Hessian 2x2
-    # [df[1]/dmun df[1]/dmup; df[2]/dumun df[2]/dmup]
-    # J^-1 = 1/(ad-bc) * [d -b; -c a]
-    # [mun,mup]' = [mun,mup] - J^-1 * f(mun,mup)
-    return 1
+    y = 0.49
+    G = extract_partition_function()
+    f(μ::Array{Float64}) = sum.(saha_equation(μ, T, ρ)) - [1, y]
+    #G = extract_partition_function()
+    A, Z = G[2:3]
+    β = const_k_B * T
+    ϵ = 1.0
+    while ϵ > 0.1
+        println("error: ", ϵ)
+        dXdμₙ  = sum((A .- Z)*β.*saha_equation(μ, T, ρ)[1])
+        dXdμₚ  = sum(β*Z.*saha_equation(μ, T, ρ)[1])
+        dYₑdμₙ = sum(dXdμₙ./(A.*Z))
+        dYₑdμₚ = sum(dXdμₚ./(A.*Z))
+        det = (dXdμₙ*dYₑdμₚ - dXdμₚ*dYₑdμₙ)
+        J⁻¹ = 1.0/det * [dXdμₙ dXdμₚ; dYₑdμₙ dYₑdμₚ]
+        μⁱ⁺¹ = μ .- J⁻¹.*f(μ)
+        ϵ = √(abs(sum((μⁱ⁺¹ - μⁱ⁺¹).*(μⁱ⁺¹ - μⁱ⁺¹))))
+    end
+    return μ
 end
+sol = my_newton_raphson([1.1,2.1],2.1,2.2)

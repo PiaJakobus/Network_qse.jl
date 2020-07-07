@@ -3,7 +3,9 @@ using Network_qse
 
 
 @testset "network_nse" begin
-    @test isa(initial_partition_function()[1], Array{Float64,2})
+    @test isa(initial_partition_function(), Array{Float64,2})
+    @test isa(saha_equation([1,3],1,2), Array{Float64})
+    @test my_newton_raphson([1.1,2.1],2.1,2.2) == [1.1,2.1]
 end
 
 @testset "tools" begin

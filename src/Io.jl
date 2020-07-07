@@ -97,7 +97,7 @@ a = read_mass_frdm()
 
 d1 = read_mass_frdm()
 d2, g = read_part_frdm()
-g = G5
+
 m_charge_number = d1[:,1]
 m_atomic_number = d1[:,2]
 m_mass          = d1[:,3]
@@ -124,7 +124,6 @@ function read_species()
     k4 = permutedims(hcat(k3...))
     return k4, number_species
 end
-
 
 
 
