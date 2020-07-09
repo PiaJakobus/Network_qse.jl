@@ -24,9 +24,13 @@ export findnearest
 export linear_interpolation
 export saha_equation
 
+struct my_data
+          A::Array{Float64}
+          Z::Array{Float64}
+          G::Vector
+end
 
-
-global G = extract_partition_function()
+G = extract_partition_function()
 npart = length(G[1])
 masses = read_mass_frdm()
 nmass = length(masses[:,1])
@@ -89,28 +93,40 @@ function interpol(T)
 end
 
 
-
-function saha_equation(μ::Array{Float64},T::Float64,ρ::Float64)
+function charge_neutrality(μ::Vector,T::Float64,ρ::Float64)
     A, Z, m = G[[2,3,5]]
-    N = A - Z
+    N = A .- Z
+    result = zeros(eltype(μ),length(A))
     μₙ,μₚ = μ
-    E_b =  m - Z*m[2] + N*m[1]
+    E_b =  m .- Z*m[2] .+ N*m[1]
     prefact = pr[:,1]#this object is an array, interpolate!
-    xᵢ = prefact./ρ .* exp.((μₚ .* Z + μₙ .* N - E_b).*(const_k_B * T))
-    yₑ = xᵢ .* Z ./ A
-    return xᵢ,yₑ
+    result = (((prefact) ./ (ρ)) .* exp.((μₚ .* Z + μₙ .* N - E_b)./(const_k_B*T)))[:]
+    #result = (xᵢ .* Z ./ A)[:]
+    return result
 end
-a = saha_equation([1,3],1,2)
+
+function saha_equation(μ::Vector,T::Float64,ρ::Float64)
+    A, Z, m = G[[2,3,5]]
+    N = A .- Z
+    result = zeros(eltype(μ),length(A))
+    μₙ,μₚ = μ
+    E_b =  m .- Z*m[2] .+ N*m[1]
+    prefact = pr[:,1]#this object is an array, interpolate!
+    result = ((prefact ./ ρ) .* exp.((μₚ .* Z + μₙ .* N - E_b)./(const_k_B*T)))[:]
+    #yₑ = xᵢ .* Z ./ A
+    return result
+end
 
 
+f([1.1,2.1])
+h([1.1,2.1])
 
-
-f(x::Vector) = sum(sin, x)
-x = rand(2)
-g = x -> ForwardDiff.derivative(a, x); # g = ∇f
-
-
-
+f(x) = saha_equation(x,1.1,2.2)
+h(x) = charge_neutrality(x,1.1,2.2)
+dxᵢ = x -> ForwardDiff.jacobian(f,x) # g = ∇f
+dyₑ = x -> ForwardDiff.jacobian(h,x)ss
+res1 = dxᵢ([1.1,2.2])
+res2 = dyₑ([1.1,2.2])
 
 
 
@@ -143,7 +159,6 @@ function my_newton_raphson(μ::Array{Float64},T::Float64,ρ::Float64)::Array{Flo
     β = const_k_B * T
     ϵ = 1.0
     while ϵ > 0.1
-        #println("error: ", ϵ)
         dXdμₙ  = sum((A .- Z)*β.*saha_equation(μ, T, ρ)[1])
         dXdμₚ  = sum(β*Z.*saha_equation(μ, T, ρ)[1])
         dYₑdμₙ = sum(dXdμₙ./(A.*Z))
@@ -156,6 +171,4 @@ function my_newton_raphson(μ::Array{Float64},T::Float64,ρ::Float64)::Array{Flo
     return μ
 end
 sol = my_newton_raphson([1.1,2.1],2.1,2.2)
-b = sum.(saha_equation([1.1,2.1],2.1,2.2))
-a = saha_equation([1.1,2.1],2.1,2.2)
 end
