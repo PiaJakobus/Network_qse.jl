@@ -100,8 +100,8 @@ d2, g = read_part_frdm()
 
 m_charge_number = d1[:,1]
 m_atomic_number = d1[:,2]
-m_mass          = d1[:,3]
-m_spin          = d1[:,4]
+flag            = d1[:,3]
+m_mass          = d1[:,4]
 p_charge_number = d2[:,1]
 p_atomic_number = d2[:,2]
 m_zz_aa = d1[:,[1,2]]
@@ -142,10 +142,11 @@ function extract_partition_function()
                 push!(fpart, g[j])
                 push!(atomic_number, m_atomic_number[i])
                 push!(charge_number, m_charge_number[i])
-                push!(spin, m_spin[i])
+                push!(spin, d2[j,3])
                 push!(mass, m_mass[i])
             end
         end
     end
     return fpart, atomic_number, charge_number, spin, mass
 end
+extract_partition_function()
