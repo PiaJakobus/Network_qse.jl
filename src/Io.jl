@@ -61,13 +61,13 @@ function read_part_frdm()
 
     k = vcat(map(x->split.(x, " "), data_string)...)
     k1 = map.(j-> filter!(i -> i != "", k[j]), 1:length(k))
-    k2 = map(n->tryparse.(Float64,n), k1)
+    k2 = map(n->tryparse.(BigFloat,n), k1)
     k3 = permutedims(hcat(k2...))
 
     G_string = vcat(map(n-> str_f[3+5*n:5+5*n], 0:floor(Int, length(str_f)/5)-1)...)
     G_substring = vcat(map(x->split.(x, " "), G_string)...)
     G1 = map.(j -> filter!(i -> i != "", G_substring[j]), 1:length(G_substring))
-    G2 = map(n->tryparse.(Float64,n), G1)
+    G2 = map(n->tryparse.(BigFloat,n), G1)
     G3 = permutedims(hcat(G2...))
     G4 = map(n->G3[1+3*n:3+3*n, 1:8], 0:floor(Int, size(G3)[1]/3)-1)
     G5 = map(x -> hcat(transpose(x)...), G4)
@@ -85,7 +85,7 @@ function read_mass_frdm()
     k = vcat(map(x->split.(x, " "), b)...)
     k1 = map.(j-> filter!(i -> i != "", k[j]), 1:length(k))
     k2 = map(i->deleteat!(i, 3), k1)
-    k3 = map(n->tryparse.(Float64,n), k2)
+    k3 = map(n->tryparse.(BigFloat,n), k2)
     k4 = map(x->x[1:4], k3)
     k4_arr = permutedims(hcat(k4...))
     return k4_arr
@@ -119,8 +119,8 @@ function read_species()
     deleteat!(splitting, [1])
     k = vcat(map(x->split.(x, " "), splitting)...)
     k1 = map.(j-> filter!(i -> i != "", k[j]), 1:length(k))
-    k2 = map(i->deleteat!(i, 1), k1)
-    k3 = map(n->tryparse.(Float64,n), k2)
+    k2 = map(i->deleteats!(i, 1), k1)
+    k3 = map(n->tryparse.(BigFloat,n), k2)
     k4 = permutedims(hcat(k3...))
     return k4, number_species
 end
@@ -129,12 +129,12 @@ end
 
 
 function extract_partition_function()
-    fpart         = Array{Float64,2}[]
-    #fpart         = Vector{Float64}()
-    atomic_number = Vector{Float64}()
-    charge_number = Vector{Float64}()
-    spin          = Vector{Float64}()
-    mass          = Vector{Float64}()
+    fpart         = Array{BigFloat,2}[]
+    #fpart         = Vector{BigFloat}()
+    atomic_number = Vector{BigFloat}()
+    charge_number = Vector{BigFloat}()
+    spin          = Vector{BigFloat}()
+    mass          = Vector{BigFloat}()
     for i in eachindex(m_charge_number)
         for j in eachindex(p_charge_number)
             if (m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])
@@ -149,4 +149,4 @@ function extract_partition_function()
     end
     return fpart, atomic_number, charge_number, spin, mass
 end
-extract_partition_function()
+G = extract_partition_function()

@@ -4,8 +4,10 @@ using Network_qse
 
 @testset "network_nse" begin
     @test isa(initial_partition_function(), Array{Float64,2})
-    @test isa(saha_equation([1,3],1,2), Array{Float64})
+    @test isa(saha_equation([1.1,3.2],1.4,2.5), Array{Float64})
     @test my_newton_raphson([1.1,2.1],2.1,2.2) == [1.1,2.1]
+    @test eos((1,2,3))[1][1] ==  1.2067926406393289e6
+    @test sum(mass_i([1.5e-5,1.1e-5], 3e9, 1e9)) == exp(mass_fraction([1.5e-5,1.1e-5], 3e9, 1e9))
 end
 
 @testset "tools" begin
