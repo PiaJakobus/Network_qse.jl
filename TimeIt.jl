@@ -57,5 +57,26 @@ macro timeit(ex)
         best
     end
 end
+a = zeros(Float64,10000,10000)
+@timeit (a.^2).^2
+@timeit a.^4
+# loops, best of 3: 172.43 ms per loop
+# loops, best of 3: 1.11 s per loop
+
+function benchmark()
+    a = zeros(Float64,10000,10000)
+    benchmark_4(a::Array{Float64,2}) = a.^4
+    benchmark_22(a::Array{Float64,2}) = (a.^2).^2
+    benchmark_4(a)
+    @timeit benchmark_4(a)
+    benchmark_22(a)
+    @timeit benchmark_22(a)
+end
+
+benchmark()
+benchmark()
+
+#  loops, best of 3: 170.89 ms per loop
+
 
 end  # module

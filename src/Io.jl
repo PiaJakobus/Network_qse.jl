@@ -1,3 +1,7 @@
+module Io
+
+
+export extract_partition_function
 """
 read in follwing files:
 ----------------
@@ -49,6 +53,8 @@ Each entry consists of 5 lines:
    4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 .
 Information for the next isotope starts after the last partition
 function line.
+
+>>>>>    PIA: ADDED partition functions and A,Z,s for n,p,d,T,3He
 """
 
 function read_part_frdm()
@@ -71,9 +77,9 @@ function read_part_frdm()
     G3 = permutedims(hcat(G2...))
     G4 = map(n->G3[1+3*n:3+3*n, 1:8], 0:floor(Int, size(G3)[1]/3)-1)
     G5 = map(x -> hcat(transpose(x)...), G4)
-
     return k3, G5
 end
+
 
 
 function read_mass_frdm()
@@ -91,22 +97,6 @@ function read_mass_frdm()
     return k4_arr
 end
 
-a = read_mass_frdm()
-
-
-
-d1 = read_mass_frdm()
-d2, g = read_part_frdm()
-
-m_charge_number = d1[:,1]
-m_atomic_number = d1[:,2]
-flag            = d1[:,3]
-m_mass          = d1[:,4]
-p_charge_number = d2[:,1]
-p_atomic_number = d2[:,2]
-m_zz_aa = d1[:,[1,2]]
-p_zz_aa = d2[:,[1,2]]
-
 
 
 
@@ -119,7 +109,7 @@ function read_species()
     deleteat!(splitting, [1])
     k = vcat(map(x->split.(x, " "), splitting)...)
     k1 = map.(j-> filter!(i -> i != "", k[j]), 1:length(k))
-    k2 = map(i->deleteats!(i, 1), k1)
+    k2 = map(i->deleteat!(i, 1), k1)
     k3 = map(n->tryparse.(BigFloat,n), k2)
     k4 = permutedims(hcat(k3...))
     return k4, number_species
@@ -127,26 +117,37 @@ end
 
 
 
-
 function extract_partition_function()
+    d1 = read_mass_frdm()
+    d2, g = read_part_frdm()
+    m_charge_number = d1[:,1]
+    m_atomic_number = d1[:,2]
+    flag            = d1[:,3]
+    m_mass          = d1[:,4]
+    p_charge_number = d2[:,1]
+    p_atomic_number = d2[:,2]
+    m_zz_aa = d1[:,[1,2]]
+    p_zz_aa = d2[:,[1,2]]
     fpart         = Array{BigFloat,2}[]
-    #fpart         = Vector{BigFloat}()
     atomic_number = Vector{BigFloat}()
     charge_number = Vector{BigFloat}()
     spin          = Vector{BigFloat}()
     mass          = Vector{BigFloat}()
-    for i in eachindex(m_charge_number)
+    #for k in eachindex(particles_Z)
         for j in eachindex(p_charge_number)
-            if (m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])
-                #push!(fpart, transpose(reshape(hcat(g[:,j]...), (length(g[:,j][1]), length(g[:,1])))))
-                push!(fpart, g[j])
-                push!(atomic_number, m_atomic_number[i])
-                push!(charge_number, m_charge_number[i])
-                push!(spin, d2[j,3])
-                push!(mass, m_mass[i])
+            for i in eachindex(m_charge_number)
+                    if (((m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])))
+                    push!(fpart, g[j])
+                    push!(atomic_number, m_atomic_number[i])
+                    push!(charge_number, m_charge_number[i])
+                    push!(spin, d2[j,3])
+                    push!(mass, m_mass[i])
+                    end
             end
         end
-    end
     return fpart, atomic_number, charge_number, spin, mass
 end
-G = extract_partition_function()
+#
+
+
+end
