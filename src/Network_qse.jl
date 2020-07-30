@@ -102,7 +102,7 @@ function mass_fraction(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector,m::
     E_b =  (m .- Z*m_p .+ N*m_n).*const_meverg
     β = 1.0/(const_kmev*T)
     prefact = [inter_pr1[el](T) for el in 1:length(A)]
-    result = ((prefact / ρ) .* exp.((μ[2] .* Z .+ μ[1] .* N .- E_b).*β))[:]
+    result = ((prefact / ρ) .* exp.((μ[2] .* Z .+ μ[1] .* N .- E_b).*β))
     return result
 end
 
@@ -126,12 +126,33 @@ end
 
 function ana_dev(J,μ, T,rho,y,A,Z,m)
     N = A .- Z
-    J[1,1] = sum(N.*mass_fraction(μ, T,rho,A,Z,m))/sum(mass_fraction(μ, T,rho,A,Z,m))
-    J[1,2] = sum(Z.*mass_fraction(μ, T,rho,A,Z,m))/sum(mass_fraction(μ, T,rho,A,Z,m))
-    J[2,1] = sum((N.*Z./A).*mass_fraction(μ, T,rho,A,Z,m))/(sum((Z./A).*mass_fraction(μ, T,rho,A,Z,m))*log(y))
-    J[2,2] = sum((Z.*Z./A).*mass_fraction(μ, T,rho,A,Z,m))/(sum((Z./A).*mass_fraction(μ, T,rho,A,Z,m))*log(y))
+    β = 1.0/(const_kmev*T)
+    J[1,1] = sum(β.*N.*mass_fraction(μ, T,rho,A,Z,m))/sum(mass_fraction(μ, T,rho,A,Z,m))
+    J[1,2] = sum(β.*Z.*mass_fraction(μ, T,rho,A,Z,m))/sum(mass_fraction(μ, T,rho,A,Z,m))
+    J[2,1] = sum((β.*N.*Z./A).*mass_fraction(μ, T,rho,A,Z,m))/(sum((Z./A).*mass_fraction(μ, T,rho,A,Z,m))*log(y))
+    J[2,2] = sum((β.*Z.*Z./A).*mass_fraction(μ, T,rho,A,Z,m))/(sum((Z./A).*mass_fraction(μ, T,rho,A,Z,m))*log(y))
     return J
 end
+
+
+F = zeros(2)
+J = zeros(Float64, 2,2)
+test_dev1(x::Vector) = logsumexp(log_mass_fraction(x,t,rho,A,Z,m))
+test_dev2(x::Vector) = logsumexp(log_charge_neutrality(x,t,rho,A,Z,m))/log(y) - 1
+test_dev(x::Vector)  = f(F,x,t,y,rho,A,Z,m)
+g = x -> [ForwardDiff.gradient(test_dev1,x),ForwardDiff.gradient(test_dev2,x)]
+h = x -> ForwardDiff.jacobian(test_dev,x)
+g(zeros(2))
+h(zeros(2,2))
+
+p = plot(g([1000,1000])[2])
+for i in LinRange(0,1000,5)
+    plot!(p, g([i,i])[1],color=:red, legend = :false)
+    plot!(p, g([i,i])[2],color=:green, legend = :false)
+    plot!(p, ana_dev(J,[i,i],t,rho,y,A,Z,m)[1,:],color=:orange,seriestype = :scatter,legend = :false)
+    plot!(p, ana_dev(J,[i,i],t,rho,y,A,Z,m)[2,:],color=:blue,seriestype = :scatter,legend = :false)
+end
+p
 
 N = 10
 sol_T = Array{BigFloat,2}(undef,(N,npart))
@@ -145,45 +166,40 @@ y = 0.49
 k = 0
 t = 3e9
 
-F = zeros(2)
-test_dev1(x::Vector) = logsumexp(log_mass_fraction(x,t,rho,A,Z,m))
-test_dev2(x::Vector) = logsumexp(log_charge_neutrality(x,t,rho,A,Z,m))/y-1.0
-test_dev(x::Vector)  = f(F,x,t,y,rho,A,Z,m)
-g = x -> [ForwardDiff.gradient(test_dev1,x),ForwardDiff.gradient(test_dev2,x)]
-h = x -> ForwardDiff.jacobian(test_dev,x)
-g(zeros(2))
-h(zeros(2,2))
-
-p = plot(g(zeros(2))[1])
-for i in LinRange(1,10,100)
-    plot!(p, g([i,i])[1])
-end
-p
-
 for (i,t) in enumerate(LinRange(1e9,1e10,N)), (j,y) in enumerate(eos(range)[3][end])
-    #sol = nlsolve((F,x)->f(F,x,t,y,rho), (J,x)->ana_dev(J,x,t,rho,y), [-0.2; 0.12])
+    sol = nlsolve((F,x)->f(F,x,t,y,rho,A,Z,m), (J,x)->ana_dev(J,x,t,rho,y,A,Z,m), [-0.2; 0.12])
 
     sol_auto = nlsolve((F,x)->f(F,x,t,y,rho,A,Z,m), [-0.2; 0.12],autodiff = :forward)#, method = :newton)#iterations = 1000)
 
-    println("temp: ", t, sol_auto.zero, "  ", sum(mass_fraction([sol_auto.zero[1],sol_auto.zero[2]],t,rho,A,Z,m)),"  ", sum(exp.(log_charge_neutrality([sol_auto.zero[1],sol_auto.zero[2]],t,rho,A,Z,m)))-y)
-    #sol_T[i,:] = mass_fraction([sol.zero[1],sol.zero[2]], t,rho)
+    println("temp: ", t, sol_auto.zero, "  ", sum(mass_fraction([sol.zero[1],sol.zero[2]],t,rho,A,Z,m)),"  ", logsumexp(log_charge_neutrality([sol.zero[1],sol.zero[2]],t,rho,A,Z,m))/log(y) -1)
+    sol_T[i,:] = mass_fraction([sol.zero[1],sol.zero[2]], t,rho,A,Z,m)
     sol_T_auto[i,:] = mass_fraction([sol_auto.zero[1],sol_auto.zero[2]], t,rho,A,Z,m)
-    #chempot[:,i] = sol.zero
+    chempot[:,i] = sol.zero
     chempot_auto[:,i] = sol_auto.zero
 end
 
-plot(LinRange(1e6,1e10,N),sol_T .+ 0.0000001, yaxis=:log, ylims=(10e-6,1.0),xlabel = "T [K]", ylabel = "Xᵢ")
-plot(LinRange(1e6,1e10,N),sol_T_auto .+ 0.0000001, yaxis=:log, ylims=(10e-6,1.0),xlabel = "T [K]", ylabel = "Xᵢ")
+fig = plot(LinRange(1e9,1e10,N),sol_T .+ 0.0000001, ylims=(10e-3,1.0), yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",legend = :false)
+savefig(fig,"nse.pdf")
 
-plot(LinRange(1e6,1e10,N),chempot[1,:], seriestype = :scatter, xlabel = "T [K]", ylabel ="μₙ", legend = :false)
-plot!(LinRange(1e6,1e10,N),chempot_auto[1,:], seriestype = :scatter, xlabel = "T [K]", ylabel ="μₙ", legend = :false)
+plot!(LinRange(1e9,1e10,N),sol_T[:,find_nucl(3,2,A,Z)[1]] .+ 0.0000001,color=:red, seriestype = :scatter, yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ")
+plot(LinRange(1e9,1e10,N),sol_T_auto[:,find_nucl(3,2,A,Z)[1]] .+ 0.0000001, color=:orange, yaxis=:log, xlabel = "T [K]", ylabel = "Xᵢ",title="3He")
+savefig("he3.pdf")
+#ylims=(10e-6,1.0),
+plot(LinRange(1e9,1e10,N),chempot[1,:], seriestype = :scatter,color=:blue, xlabel = "T [K]", ylabel ="μₙ", legend = :false)
+plot!(LinRange(1e9,1e10,N),chempot_auto[1,:], color=:green, xlabel = "T [K]", ylabel ="μₙ", legend = :false)
+savefig("mu_n.pdf")
+
+plot(LinRange(1e9,1e10,N),chempot[2,:], seriestype = :scatter,color=:blue, xlabel = "T [K]", ylabel ="μₚ", legend = :false)
+plot!(LinRange(1e9,1e10,N),chempot_auto[2,:], color=:green, xlabel = "T [K]", ylabel ="μₚ", legend = :false)
+savefig("mu_p.pdf")
+
 
 #seriestype = :scatter
 plot(A,sol_T,seriestype = :scatter)
 plot(G[3], transpose(sol_T),  xlabel = "T [K]", ylabel = "Xᵢ",legend = :false)
 
 
-
+"""return index in (A/Z/m/s)"""
 function find_nucl(aa,zz,A,Z)
     y = findall(x->x == zz, Z)
     return y[findall(x->x==aa, A[y])]
