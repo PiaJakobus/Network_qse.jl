@@ -6,13 +6,16 @@ const_meverg = 1.602e-6
 const_ergmev = 1/const_meverg
 const_k_B = 1.380658e-16
 const_c = 2.99792458e10
+const_N_A = 6.02214076e23
 const_h_barc = 197.327e-13
-const_hh = const_h_barc / const_c * 2.0 * π * const_meverg
+const_hh = (const_h_barc / const_c) * 2.0 * π * const_meverg
 data_T = 1e9.*Float64[0.01, 0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10]
 range = (49.0,19.0,19.0)
 m_n = 8.071
 m_p = 7.289
 
+
+dict = Dict("fe56" => [56,26], "fe54" => [54,26], "chr52" => [52,24], "cob55" => [55,27], "ni56" => [56,28], "cop55" => [55,29], "ti50" => [50,22])
 
 """
 
