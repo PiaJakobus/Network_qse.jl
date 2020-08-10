@@ -10,7 +10,9 @@ using Optim
 using ForwardDiff
 using Interpolations
 using Plots
+gr()
 using NLsolve
+using LsqFit
 using Dierckx
 using LinearAlgebra
 
@@ -60,7 +62,6 @@ end
 
 
 
-
 """
 interpolation
 """
@@ -70,6 +71,7 @@ npart = length(A)
 inter_pr1 = [Spline1D(data_T, log.(pr[j,:])) for j in 1:npart]
 plot(LinRange(1e7,1e10,50),exp.(inter_pr1[end](LinRange(1e7,1e10,50))),legend = :false)
 plot!(data_T, pr[end,:],seriestype=:scatter,legend = :false)
+
 
 
 function log_charge_neutrality(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector,m::Vector)
@@ -85,34 +87,13 @@ end
 function log_mass_fraction(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector,m::Vector)
     N = A .- Z
     result = zeros(eltype(μ),length(A))
-    #μₙ,μₚ = μ
     E_b =  (m .- Z*m_p .+ N*m_n)*const_meverg
     β = 1.0/(const_k_B*T)
     prefact = [exp.(inter_pr1[el](T)) for el in 1:length(A)]
-        #println(prefact)
-    result = log.(prefact./ ρ).+(μ[2] .* Z .+ μ[1] .* N .- E_b).*β
+    result = log.(prefact./ ρ).+(μ[2] .* Z .+ μ[1] .* N .- E_b).*β #μₙ,μₚ = μ
     return result
 end
 
-logsumexp(log_mass_fraction([1e-5,1e-5],1e9,2e8,A,Z,m))
-
-
-function mass_fraction(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector,m::Vector)
-    N = A .- Z
-    result = zeros(eltype(μ),length(A))
-    #μₙ,μₚ = μ
-    E_b =  (m .- Z*m_p .+ N*m_n).*const_meverg
-    β = 1.0/(T*const_k_B)
-    prefact = [exp.(inter_pr1[el](T)) for el in 1:length(A)]
-    result = ((prefact / ρ) .* exp.((μ[2] .* Z .+ μ[1] .* N .- E_b).*β))
-    return result
-end
-a = mass_fraction([1e-6,1e-6],1e9,2e8,A,Z,m)[1]
-b = mass_fraction([0.001,0.001],1e9,2e8,A,Z,m)[2]
-c = mass_fraction([10,10],1e9,2e8,A,Z,m)[3]
-c.*const_meverg
-
-(a-b).*c
 
 
 function logsumexp(arr)
@@ -135,13 +116,10 @@ Z
 function ana_dev(J,μ, T,rho,y,A,Z,m)
     N = A .- Z
     β = 1.0/(const_k_B*T)
-    J[1,1] = sum(β.*N.*mass_fraction(μ, T,rho,A,Z,m))/sum(mass_fraction(μ, T,rho,A,Z,m))
-    J[1,2] = sum(β.*Z.*mass_fraction(μ, T,rho,A,Z,m))/sum(mass_fraction(μ, T,rho,A,Z,m))
-    J[2,1] = sum((β.*N.*Z./A).*mass_fraction(μ, T,rho,A,Z,m))/(sum((Z./A).*mass_fraction(μ, T,rho,A,Z,m))*log(y))
-    J[2,2] = sum((β.*Z.*Z./A).*mass_fraction(μ, T,rho,A,Z,m))/(sum((Z./A).*mass_fraction(μ, T,rho,A,Z,m))*log(y))
-    #println("J[1,1]: ", J[1,1], " J[1,2]: ", J[1,2])
-    #println("J[2,1]: ", J[2,1], " J[2,2]: ", J[2,2])
-    #println(".... ",sum(mass_fraction(μ, T,rho,A,Z,m)))
+    J[1,1] = sum(β.*N.*exp.(log_mass_fraction(μ, T,rho,A,Z,m)))/sum(exp.(log_mass_fraction(μ, T,rho,A,Z,m)))
+    J[1,2] = sum(β.*Z.*exp.(log_mass_fraction(μ, T,rho,A,Z,m)))/sum(exp.(log_mass_fraction(μ, T,rho,A,Z,m)))
+    J[2,1] = sum((β.*N.*Z./A).*exp.(log_mass_fraction(μ, T,rho,A,Z,m)))/(sum((Z./A).*exp.(log_mass_fraction(μ, T,rho,A,Z,m)))*log(y))
+    J[2,2] = sum((β.*Z.*Z./A).*exp.(log_mass_fraction(μ, T,rho,A,Z,m)))/(sum((Z./A).*exp.(log_mass_fraction(μ, T,rho,A,Z,m)))*log(y))
     return J
 end
 
@@ -164,43 +142,65 @@ for i in LinRange(0,1000,5)
     plot!(p, ana_dev(J,[i,i],t,rho,y,A,Z,m)[2,:],color=:blue,seriestype = :scatter,legend = :false)
 end
 p
-npart
-N            = 30
-N_y          = 1
-N_rho        = 1
-sol_T        = Array{BigFloat,4}(undef,(N,N_y,N_rho,npart))
-sol_T_NR       = Array{BigFloat,4}(undef,(N,N_y,N_rho,npart))
-sol_T_auto   = Array{BigFloat,4}(undef,(N,N_y,N_rho,npart))
-chempot      = Array{BigFloat,4}(undef, (2,N,N_y,N_rho))
-chempot_auto = Array{BigFloat,4}(undef, (2,N,N_y,N_rho))
-chempot_NR   = Array{BigFloat,4}(undef, (2,N,N_y,N_rho))
+
+
+
 eos_grid     = eos((49.0,19.0,19.0))
-eos_grid[3][1]
-rho = 1e7
-y = 0.5
-t = 3e9
-x = [6.492724770496382e-6, -8.232974345747265e-6]
+x_guess = [6.492724770496382e-6, -8.232974345747265e-6]
 
-data_T
-
-j = 1
-k = 1
-for (i,t) in enumerate(LinRange(1e9,12e10,30))#, (j,y) in enumerate(LinRange(0.5,0.5,N_y)), (k,rho) in enumerate(LinRange(1e9,1e9,N_rho))
-    sol_auto = nlsolve((F,x)->f(F,x,t,y,rho,A,Z,m),[6.492724770496382e-6, -8.232974345747265e-6],autodiff = :forward)#, method = :newton)#iterations = 1000)
-    sol_NR   = my_newton_raphson(x,t,rho,A,Z,m)
-    sol = nlsolve((F,x)->f(F,x,t,y,rho,A,Z,m), (J,x)->ana_dev(J,x,t,rho,y,A,Z,m), [6.492724770496382e-6, -8.232974345747265e-6])
-    println("chempot_auto: ", sol_auto.zero)#, "chempot_NR: ", sol_NR)
-    println("chempot_NR: ", sol_NR, f(F,sol_NR,t,y,rho,A,Z,m))
-    println("chempot_ana: ", sol.zero)
-    println("temp: ", t, "<<", sol_auto.zero, "  ", sum(mass_fraction([sol_auto.zero[1],sol_auto.zero[2]],t,rho,A,Z,m))-1,"  ", logsumexp(log_charge_neutrality([sol_auto.zero[1],sol_auto.zero[2]],t,rho,A,Z,m))/log(y) -1)
-    sol_T[i,j,k,:]      = mass_fraction([sol.zero[1],sol.zero[2]], t,rho,A,Z,m)
-    sol_T_NR[i,j,k,:]     = mass_fraction(sol_NR, t,rho,A,Z,m)
-    sol_T_auto[i,j,k,:] = mass_fraction([sol_auto.zero[1],sol_auto.zero[2]], t,rho,A,Z,m)
-    chempot[:,i,j,k] = sol.zero
-    chempot_auto[:,i,j,k] = sol_auto.zero
-    chempot_NR[:,i,j,k] = sol_NR
-
+function solve(x_guess, f_root,dev_a)
+    N            = 1
+    N_y          = 40
+    N_rho        = 1
+    sol_T        = Array{BigFloat,4}(undef,(N,N_y,N_rho,npart))
+    sol_T_NR       = Array{BigFloat,4}(undef,(N,N_y,N_rho,npart))
+    sol_T_auto   = Array{BigFloat,4}(undef,(N,N_y,N_rho,npart))
+    chempot      = Array{BigFloat,4}(undef, (2,N,N_y,N_rho))
+    chempot_auto = Array{BigFloat,4}(undef, (2,N,N_y,N_rho))
+    chempot_NR   = Array{BigFloat,4}(undef, (2,N,N_y,N_rho))
+    t = 9e9
+    rho = 1e7
+    y = 0.41
+    i = 1
+    j = 1
+    k = 1
+    for (j,y) in enumerate(LinRange(0.41,0.6,N_y))#, (k,rho) in enumerate(LinRange(1e9,1e9,N_rho))
+    #for (i,t) in enumerate(LinRange(1e9,12e10,N))
+        sol_auto = nlsolve((F,x)->f_root(F,x,t,y,rho,A,Z,m),x_guess,autodiff = :forward)#, method = :newton)#iterations = 1000)
+        #sol_NR   = my_newton_raphson(x,t,y,rho,A,Z,m)
+        #sol = nlsolve((F,x)->f(F,x,t,y,rho,A,Z,m), (J,x)->ana_dev(J,x,t,rho,y,A,Z,m), [6.492724770496382e-6, -8.232974345747265e-6])
+        println("chempot_auto: ", sol_auto.zero)#, "chempot_NR: ", sol_NR)
+        #println("chempot_NR: ", sol_NR, f(F,sol_NR,t,y,rho,A,Z,m))
+        #println("chempot_ana: ", sol.zero)
+        println("temp: ", t, " << >> ","y_e ",y," ", sum(exp.(log_mass_fraction([sol_auto.zero[1],sol_auto.zero[2]],t,rho,A,Z,m)))-1,"  ", logsumexp(log_charge_neutrality([sol_auto.zero[1],sol_auto.zero[2]],t,rho,A,Z,m))/log(y) -1)
+        #sol_T[i,j,k,:]      = exp.(log_mass_fraction([sol.zero[1],sol.zero[2]], t,rho,A,Z,m))
+        #sol_T_NR[i,j,k,:]     = mass_fraction(sol_NR, t,rho,A,Z,m)
+        sol_T_auto[i,j,k,:] = exp.(log_mass_fraction([sol_auto.zero[1],sol_auto.zero[2]], t,rho,A,Z,m))
+        #chempot[:,i,j,k] = sol.zero
+        chempot_auto[:,i,j,k] = sol_auto.zero
+        x_guess = sol_auto.zero
+        #chempot_NR[:,i,j,k] = sol_NR
+    #end
+    end
+    return sol_T_auto,chempot_auto
 end
+
+X_i,mu = solve(x_guess,f,ana_dev)
+
+X_i
+function mapping()
+    for (i,j) in enumerate(1:10;), (k,l) in enumerate(20:30;)
+        println(j,l)
+    end
+end
+mapping()
+
+filter(x-> !=(x,map(j -> any(X_i[1,:,1,j] .> 0.001) && (X_i[1,:,1,,j), 1:length(Z))
+
+filter(x -> !=(x,Bool), [1,2,3])
+
+
+n > 0 || return 0:-1
 
 range_T = LinRange(data_T[1],data_T[end],30)
 fig_auto = plot(range_T,sol_T_auto[:,1,1,:] .+ 0.0000001,  ylims=(1e-2,1.0),yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]),legend = :false)
@@ -211,24 +211,41 @@ savefig(fig_auto,"nse_auto_NR_1e7.pdf")
 savefig(fig_auto,"nse_auto_analyt.pdf")
 
 
-dict = Dict("he3" => [3,2], "fe56" => [56,26], "fe54" => [54,26], "chr52" => [52,24], "cob55" => [55,27], "ni56" => [56,28], "cop55" => [55,29], "ti50" => [50,22])
+dict2 = Dict("n" => [1,0], "p" => [1,1], "he3" => [3,2], "o16" => [16,8], "ne20" => [20,10], "mg24" => [24,12],
+"si28" => [28,14], "s32" => [32,16], "ar36" => [36,18], "ca40" => [40,20], "ti44" => [44,22], "ti50" => [50,22],"cr48" => [48,24],
+"chr52" => [52,24], "fe52" => [52,26], "fe54" => [54,26], "cob55" => [55,27], "cop55" => [55,29],"ni56" => [56,28], "fe56" => [56,26],
+"v52" => [52,23], "ni62" => [62,28])
 
-str = "ti50"
+dict = Dict("n" => [1,0], "p" => [1,1], "he3" => [3,2], "o16" => [16,8], "ne20" => [20,10],
+"si28" => [28,14], "ti50" => [50,22],"chr52" => [52,24], "fe54" => [54,26], "cob55" => [55,27], "cop55" => [55,29],"ni56" => [56,28], "fe56" => [56,26],
+"ni62" => [62,28])
+
+
+
+
+str = "ni62"
 vary_T = plot(range_T,sol_T_auto[:,1,1,find_nucl(1,0,A,Z)[1]] .+ sol_T_auto[:,1,1,find_nucl(1,1,A,Z)[1]] .+ 0.0000001,yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = "p+n")#,yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]))
-elem = plot(range_T,sol_T_auto[:,1,1,find_nucl(dict[str][1],dict[str][2],A,Z)[1]] .+ 0.0000001,xlabel = "T [K]", ylabel = "Xᵢ",label = str)
+elem = plot(range_T,X_i[:,1,1,find_nucl(52,26,A,Z)[1]] .+ 0.0000001,xlabel = "T [K]", ylabel = "Xᵢ",label = str)
 for k in keys(dict)
-    plot(range_T,sol_T_auto[:,1,1,find_nucl(dict[k][1],dict[k][2],A,Z)[1]] .+ 0.0000001, yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = k)
+    plot!(range_T,sol_T_auto[:,1,1,find_nucl(dict[k][1],dict[k][2],A,Z)[1]] .+ 0.0000001, yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = k)
     #plot!(range_T,sol_T_NR[:,1,1,find_nucl(dict[k][1],dict[k][2],A,Z)[1]] .+ 0.0000001, seriestype =:scatter,yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = k)#,yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]))
 end
 vary_T
 savefig(elem,"ti50_den1e7.pdf")
 
-vary_y = plot(LinRange(0.41,0.5,N_y),sol_T_auto[:,1,1,find_nucl(1,0,A,Z)[1]] .+ 0.0000001, yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = "p")#,yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]))
+
+fig_auto = plot(LinRange(0.41,0.5,N_y),sol_T_auto[1,:,1,:] .+ 0.0000001,  ylims=(1e-2,1.0),yaxis=:log,xlabel = "Yₑ", ylabel = "Xᵢ",yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]),legend = :false)
+vary_y = plot(LinRange(0.41,0.6,40),X_i[1,:,1,find_nucl(52,26,A,Z)[1]] .+ 0.0000001, yaxis=:log,xlabel = "Yₑ", ylabel = "Xᵢ",label = "fe52")#,yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]))
 for k in keys(dict)
-    plot!(LinRange(0.41,0.5,N_y),sol_T_auto[1,:,1,find_nucl(dict[k][1],dict[k][2],A,Z)[1]] .+ 0.0000001, yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = k)
-    plot!(LinRange(0.41,0.5,N_y),sol_T[1,:,1,find_nucl(dict[k][1],dict[k][2],A,Z)[1]] .+ 0.0000001, seriestype =:scatter,yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = k)#,yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]))
+    plot!(LinRange(0.41,0.6,40),X_i[1,:,1,find_nucl(dict[k][1],dict[k][2],A,Z)[1]] .+ 0.0000001,yaxis=:log, legend=:left,xlabel = "Yₑ", ylabel = "Xᵢ",label = k)
+    #plot!(LinRange(0.41,0.5,N_y),sol_T[1,:,1,find_nucl(dict[k][1],dict[k][2],A,Z)[1]] .+ 0.0000001, seriestype =:scatter,yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = k)#,yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]))
 end
 vary_y
+savefig(fig_auto, "vary_ye_all_rho1e7_t3.5e8.pdf")
+savefig(vary_y,"vary_ye_t3.5e9_rho1e9_higher_resol.pdf")
+
+
+
 
 vary_rho = plot(LinRange(0.41,0.5,N_y),sol_T_auto[:,1,1,find_nucl(1,0,A,Z)[1]] .+ 0.0000001, yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = "p")#,yticks = ([1e-2,0.1,1], ["1e-2", "0.1","1"]))
 for k in keys(dict)
@@ -248,7 +265,7 @@ plot(LinRange(1e8,1e9,N),chempot[1,:,1], seriestype = :scatter,color=:blue, xlab
 plot!(LinRange(1e8,1e9,N),chempot_auto[1,:,1], color=:green, xlabel = "T [K]", ylabel ="μₙ", legend = :false)
 savefig("mu_n.pdf")
 
-plot(LinRange(1e8,1e9,N),chempot[2,:,1], seriestype = :scatter,color=:blue, xlabel = "T [K]", ylabel ="μₚ", legend = :false)
+plot(vary_T,chempot_auto[2,:,1,1], seriestype = :scatter,color=:blue, xlabel = "T [K]", ylabel ="μₚ", legend = :false)
 plot!(LinRange(1e8,1e9,N),chempot_auto[2,:,1], color=:green, xlabel = "T [K]", ylabel ="μₚ", legend = :false)
 savefig("mu_p.pdf")
 
@@ -285,10 +302,10 @@ dYₑdμₙ  dYₑdμₚ
 soli = my_newton_raphson([7.862587588204352e-6, -9.617299012693205e-6],1e9,1e9,A,Z,m)
 mat = ones(Float64, 2,2)
 pinv(mat)
-function my_newton_raphson(μ,T,rho,A,Z,m)
+function my_newton_raphson(μ,T,y,rho,A,Z,m)
     mat = zeros(Float64, 2,2)
     #println(">>>><<<<", det(mat))
-    y = 0.5
+    #y = 0.41
     F = Array{Float64,2}(undef, 2, 1)
     fun(x) = f(F,x,T,y,rho,A,Z,m)
     N = A .- Z
@@ -309,14 +326,14 @@ function my_newton_raphson(μ,T,rho,A,Z,m)
         #println(">>> fun", fun(μ))
         #println(">>> J⁻¹ ", J⁻¹)
         #println(det(J))
-        μⁱ⁺¹ = μ .- (zaehler/10.0).*[J⁻¹[1,1]*fun(μ)[1] + J⁻¹[1,2]*fun(μ)[2]; J⁻¹[2,1]*fun(μ)[1] + J⁻¹[2,2]*fun(μ)[2]]
+        μⁱ⁺¹ = μ .- (zaehler/50.0).*[J⁻¹[1,1]*fun(μ)[1] + J⁻¹[1,2]*fun(μ)[2]; J⁻¹[2,1]*fun(μ)[1] + J⁻¹[2,2]*fun(μ)[2]]
         μ = μⁱ⁺¹
         #println(">>> mu'", μ)
         #println(sqrt(f(F,μ,T,y,rho,A,Z,m)'f(F,μ,T,y,rho,A,Z,m)))
         #print("-----",μⁱ⁺¹,"\n")
         #ϵ = sum(mass_fraction([μⁱ⁺¹[1],μⁱ⁺¹[2]],T,rho,A,Z,m)) - 1.0
         ϵ = fun(μ)[1]^2 + fun(μ)[2]^2
-        #println(zaehler, "  ", ">>> ϵ >>>", ϵ," ", f(F,x,T,y,rho,A,Z,m))
+        println(zaehler, "  ", ">>> ϵ >>>", ϵ," ", f(F,x,T,y,rho,A,Z,m))
     end
     println("iterations: ", zaehler)
     return μ
