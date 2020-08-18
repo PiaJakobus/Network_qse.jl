@@ -1,0 +1,83 @@
+function eos(ind)::Vector
+    i = 1.0:ind[1]
+    j = 1.0:ind[2]
+    k = 1.0:ind[3]
+    rho = 10.0.^(log10(1e6) .+ i./49.0 .* log10(1e10/1e6))
+    tem = 10.0.^(log10(2e9) .+ j./19.0 .* log10(9.9e9/2e9))
+    y_e = collect(0.5 .+ (k.-19.0)./19.0 .* (0.5-0.405))
+    return [rho,tem,y_e]
+end
+
+
+function logsumexp(arr)
+    max = maximum(arr)
+    dx = arr .- max
+    sumexp = sum(exp.(dx))
+    return max + log.(sumexp)
+end
+
+function f(x,T,yₑ,ρ,A,Z,m,pol)
+    F = Array{Float64,1}(undef, 2)
+    F[1] = sum(mass_conservation(x,T,ρ,A,Z,m,pol)) - 1
+    F[2] = sum(charge_neutrality(x, T,ρ,A,Z,m,pol))*(1.0/sum(mass_conservation(x,T,ρ,A,Z,m,pol))) - yₑ
+    return F
+end
+
+function ana_dev(μ, T,rho,y,A,Z,m,pol)
+    J = zeros(Float64, 2,2)
+    N = A .- Z
+    β = 1.0/(const_k_B*T)
+    J[1,1] = sum(β.*N.*mass_conservation(μ, T,rho,A,Z,m,pol))
+    J[1,2] = sum(β.*Z.*mass_conservation(μ, T,rho,A,Z,m,pol))
+    J[2,1] = sum((β.*N.*Z./A).*mass_conservation(μ, T,rho,A,Z,m,pol))
+    J[2,2] = sum((β.*Z.*Z./A).*mass_conservation(μ, T,rho,A,Z,m,pol))
+    return J
+end
+
+
+function my_newton_raphson(μ,T,rho,y,A,Z,m,pol)
+    J = zeros(Float64, 2,2)
+    F = Array{Float64,2}(undef, 2, 1)
+    fun(x) = f(x,T,y,rho,A,Z,m,pol)
+    N = A .- Z
+    β = 1.0/(const_k_B*T)
+    global ϵ = 1.0
+    global zaehler = 0
+    while ϵ > 1e-7
+        zaehler += 1
+        ana_dev!(J,μ, T,rho,y,A,Z,m)
+        J⁻¹ = pinv(J)
+        f!(F,μ,T,y,rho,A,Z,m)
+        μⁱ⁺¹ = μ .- (zaehler/30.0).*[J⁻¹[1,1]*F[1] + J⁻¹[1,2]*F[2]; J⁻¹[2,1]*F[1] + J⁻¹[2,2]*F[2]]
+        μ = μⁱ⁺¹
+        ϵ = fun(μ)[1]^2 + fun(μ)[2]^2
+        println(zaehler, "  ", ">>> ϵ >>>", ϵ)
+    end
+    println("iterations: ", zaehler)
+    return μ
+end
+
+
+range_T = LinRange(2.5e7,10e9,50)
+vary_T = Network_qse.plot()
+for k in keys(Network_qse.species)
+    vary_T = Network_qse.plot!(range_T,X_i[:,1,1,find_nucl(Network_qse.species[k][1],Network_qse.species[k][2],A,Z)[1]],ylims =(1e-5,1), yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = k)
+end
+vary_T
+
+
+range_y = LinRange(0.41,0.5,50)
+vary_y = plot()
+for k in keys(Network_qse.species)
+    plot!(range_y,X_i[1,:,1,find_nucl(Network_qse.species[k][1],Network_qse.species[k][2],A,Z)[1]] .+ 0.0000001,yaxis=:log, legend=:right,xlabel = "Yₑ", ylabel = "Xᵢ",label = k)
+end
+vary_y
+#savefig(vary_y,"vary_ye_compair_.pdf")
+
+
+range_rho = LinRange(1e7,1e10,3)
+vary_rho = plot()
+for k in keys(Network_qse.species)
+    plot!(range_rho,X_i[1,1,:,find_nucl(Network_qse.species[k][1],Network_qse.species[k][2],A,Z)[1]] .+ 0.0000001, yaxis=:log,xlabel = "T [K]", ylabel = "Xᵢ",label = k)
+end
+vary_rho
