@@ -22,3 +22,11 @@ end
     @test isa(read_mass_frdm()[4,:],Array{BigFloat,1})
     @test isa(extract_partition_function()[2:5], NTuple{4})
 end
+
+@testset "DataTypes" begin
+    include("DataTypes.jl")
+end
+
+@testset "Boltzmann" begin
+    include("Boltzmann.jl")
+end

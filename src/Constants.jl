@@ -1,21 +1,13 @@
-
-const_m_B = 1.66e-24 # baryon mass
-const_kmev = 8.61829e-11
-const_meverg = 1.602e-6
-const_ergmev = 1/const_meverg
-const_k_B = 1.380658e-16
-const_c = 2.99792458e10
-const_N_A = 6.02214076e23
-const_h_barc = 197.327e-13
-const_hh = (const_h_barc / const_c) * 2.0 * π * const_meverg
-const_range = (49.0,19.0,19.0)
-const_m_n = 8.071
-const_m_p = 7.289
-
-data_T = 1e9.*Float64[0.01, 0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10]
-
-
-species = Dict("n" => [1,0], "p" => [1,1], "he3" => [3,2], "o16" => [16,8], "ne20" => [20,10], "mg24" => [24,12],
-"si28" => [28,14], "s32" => [32,16], "ar36" => [36,18], "ca40" => [40,20], "ti44" => [44,22], "ti50" => [50,22],"cr48" => [48,24],
-"chr52" => [52,24], "fe52" => [52,26], "fe54" => [54,26], "cob55" => [55,27], "cop55" => [55,29],"ni56" => [56,28], "fe56" => [56,26],
-"v52" => [52,23], "ni62" => [62,28])
+const m_B = 1.66e-24 # baryon mass
+const kmev = 8.61829e-11
+const meverg = 1.602e-6
+const ergmev = 1/meverg
+const k_B = 1.380658e-16
+const c = 2.99792458e10
+const N_A = 6.02214076e23
+const h_barc = 197.327e-13
+const hh = (h_barc / c) * 2.0 * π * meverg
+const range = (49.0,19.0,19.0)
+const m_n = 8.071
+const m_p = 7.289
+#const data_T = 1e9.*Float64[0.01, 0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10]
