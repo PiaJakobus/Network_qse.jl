@@ -1,4 +1,4 @@
-PhysicalConstants.module Network_qse
+module Network_qse
 
 #"""
 # https://docs.julialang.org/en/v1/manual/unicode-input/
@@ -7,33 +7,20 @@ __precompile__(false)
 
 
 include("dependencies.jl")
-
 include("IO.jl")
 include("Constants.jl")
 include("DataTypes.jl")
+include("Boltzmann.jl")
+include("Tools.jl")
 
 
 
 
 
 
-
-
-
-function index_reduced_nse(A,Z,A_i,Z_i)
-    Z_arr = findall(x->x == Z_i, Z)
-    iso = Z_arr[findall(x->x==A_i, A[findall(x->x == Z_i, Z)])]
-    return iso
-end
-
-
-function nse_reduced(liste_el,arr,A,Z)
-    return vcat(map(j -> arr[index_reduced_nse(A,Z,j[1],j[2])], liste_el)...)
-end
-
-
-
-
+#TODO: umschreiben wie prefactor: nimmt struct partition function
+#TODO: write func which creates struct:
+#TODO: kommt alles in Boltzmann
 function charge_neutrality(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector,m::Vector,pol)
     N = A .- Z
     result = zeros(eltype(μ),length(A))
@@ -47,7 +34,6 @@ function charge_neutrality(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector
     return exp.(expon), exp.(diff)#(μ[2] .* Z .+ μ[1] .* N .- E_b).*β
 end
 
-charge_neutrality(x,3.5e9,1e7,A,Z,m,inter_pol)
 
 function mass_conservation(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector,m::Vector,pol)::Array{BigFloat}
     N = A .- Z
@@ -60,21 +46,9 @@ function mass_conservation(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector
 end
 
 
-function logsumexp(arr)
-    max = maximum(arr)
-    dx = arr .- max
-    sumexp = sum(exp.(dx))
-    return max + log.(sumexp)
-end
 
 
 
-
-x = [-4.276576147076027e-9, 6.0494486950703084e-9]
-t,rho,y      =  8e9,1e7,0.5
-ω,A,Z,s,m    =  Io.extract_partition_function()
-pr = initial_partition_function(ω,A,Z,s,m)
-inter_pol = [LinearInterpolation(data_T, log.(pr[j,:])) for j in 1:length(A)]
 
 
 
@@ -97,32 +71,11 @@ end
 
 
 
-function my_newton_raphson(μ,T,rho,y,A,Z,m,pol)
-    J = zeros(Float64, 2,2)
-    F = Array{Float64,2}(undef, 2, 1)
-    #fun(x) = f(x,T,y,rho,A,Z,m,pol)
-    N = A .- Z
-    β = 1.0/(const_kmev*T)
-    global ϵ = 1.0
-    global zaehler = 0
-    while ϵ > 1e-10
-        zaehler += 1
-        ana_dev!(J,μ, T,rho,y,A,Z,m,pol)
-        J⁻¹ = pinv(J)
-        f!(F,μ,T,y,rho,A,Z,m,pol)
-        μⁱ⁺¹ = μ .- [J⁻¹[1,1]*F[1] + J⁻¹[1,2]*F[2]; J⁻¹[2,1]*F[1] + J⁻¹[2,2]*F[2]]
-        μ = μⁱ⁺¹
-        ϵ = F[1]^2 + F[2]^2
-        println(zaehler, "  ", ">>> ϵ >>>", ϵ,F)
-    end
-    println("iterations: ", zaehler)
-    return μ
-end
 
-my_newton_raphson([-4e-7,-6e-9],t,rho,y,A,Z,m,inter_pol)
+
 
 function solve(x, f_root,dev_a,N_vec,i_solve,t,rho,y,reduced_netw=[[1]],reduce = false)
-    ω,A,Z,s,m =  Io.extract_partition_function()
+    ω,A,Z,s,m =  extract_partition_function()
     reduce && ((ω,A,Z,s,m) = map(x->nse_reduced(reduced_netw,x,A,Z),[ω,A,Z,s,m]))
     pr = initial_partition_function(ω,A,Z,s,m)
     linear_int = [LinearInterpolation(data_T, log.(pr[j,:])) for j in 1:length(A)]
@@ -160,17 +113,6 @@ function solve(x, f_root,dev_a,N_vec,i_solve,t,rho,y,reduced_netw=[[1]],reduce =
     #end
     return sol_T,chempot,[t,rho,y]
 end
-
-
-grids        = [100,1,1]
-X_i,mu,vals  = solve(x,Network_qse.f!,Network_qse.ana_dev!,grids,0,t,rho,y,true)
-
-
-x     = [-1.775338132874296e-3, -3.3900606691365187e-3]
-t,rho,y      =  9e7,1e7,0.5
-F             = Array{Float64,1}(undef,2)
-nlsolve((F,x)->f!(F,x,t,y,rho,A,Z,m,inter_pol),x,autodiff = :forward,method=:anderson)
-
 
 
 end

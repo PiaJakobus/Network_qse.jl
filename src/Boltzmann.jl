@@ -1,11 +1,12 @@
 """
-    prefactor
-returns prefactor of X_i, as
+    prefactor(pf)
+
+returns prefactor of X_i, as given in
 http://cococubed.asu.edu/code_pages/nse.shtml
-ω
 """
-function prefactor(pf::PartitionFunction)
-    fp₀ = pf.ω * (2 * pf.ap.s + 1)
-    λ = sqrt(hh^2 / (2.0*pf.T*π*k_B*(pf.ap.A*m_B + pf.ap.m*meverg/c^2)))
-    pf.ap.A*m_B * fp₀/λ^3
+function prefactor(T, pf::AtomicProperties)
+    #TODO: mit Stift und Papier testen
+    fp₀ = pf.ω(T) * (2 * pf.s + 1)
+    λ = sqrt(hh^2 / (2.0*T*π*k_B*(pf.A*m_B + pf.m*meverg/c^2)))
+    pf.A*m_B * fp₀/λ^3
 end

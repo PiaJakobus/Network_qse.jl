@@ -1,7 +1,3 @@
-module IO
-
-
-export extract_partition_function
 """
 read in follwing files:
 ----------------
@@ -81,7 +77,10 @@ function read_part_frdm()
 end
 
 
-
+"""
+    read_mass_frdm()
+read ground state energies
+"""
 function read_mass_frdm()
     table_string = open("$(@__DIR__)/../tables/mass-frdm95.dat", "r") do f
         readlines(f)
@@ -99,7 +98,11 @@ end
 
 
 
+"""
+    read_species()
 
+reads species from table
+"""
 function read_species()
     strings = open("$(@__DIR__)/../tables/species.txt", "r") do f
         readlines(f)
@@ -116,38 +119,34 @@ function read_species()
 end
 
 
+"""
+    extract_partition_function()
 
+checks indentical charge and atomic numbers
+in mass_frdm and part_frdm.
+Interpolates ω(T)
+"""
 function extract_partition_function()
     d1 = read_mass_frdm()
     d2, g = read_part_frdm()
-    m_charge_number = d1[:,1]
-    m_atomic_number = d1[:,2]
-    flag            = d1[:,3]
+    m_charge_number = Int64.(d1[:,1])
+    m_atomic_number = Int64.(d1[:,2])
     m_mass          = d1[:,4]
-    p_charge_number = d2[:,1]
-    p_atomic_number = d2[:,2]
-    m_zz_aa = d1[:,[1,2]]
-    p_zz_aa = d2[:,[1,2]]
-    fpart         = Array{Float64,2}[]
-    atomic_number = Vector{Float64}()
-    charge_number = Vector{Float64}()
-    spin          = Vector{Float64}()
-    mass          = Vector{Float64}()
-    #for k in eachindex(particles_Z)
-        for j in eachindex(p_charge_number)
-            for i in eachindex(m_charge_number)
-                    if (((m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])))
-                    push!(fpart, g[j])
-                    push!(atomic_number, m_atomic_number[i])
-                    push!(charge_number, m_charge_number[i])
-                    push!(spin, d2[j,3])
-                    push!(mass, m_mass[i])
-                    end
+    p_charge_number = Int64.(d2[:,1])
+    p_atomic_number = Int64.(d2[:,2])
+    T = 1e9.*Float64[0.01, 0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10]
+    #TODO: write a config where I store hard coded things
+    result        = Array{AtomicProperties, 1}(undef, 0)
+    for j in eachindex(p_charge_number)
+        for i in eachindex(m_charge_number)
+            if (((m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])))
+                #TODO:
+                atomProp = AtomicProperties(m_charge_number[i], m_atomic_number[i], d2[j,3],
+                    m_mass[i], t-> Network_qse.LinearInterpolation(T, vcat(g[j]...))(t))
+                push!(result, atomProp)
             end
         end
-    return fpart, atomic_number, charge_number, spin, mass
-end
+    end
 
-
-
+    return result
 end
