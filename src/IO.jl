@@ -141,8 +141,16 @@ function extract_partition_function()
         for i in eachindex(m_charge_number)
             if (((m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])))
                 #TODO:
-                atomProp = AtomicProperties(m_charge_number[i], m_atomic_number[i], d2[j,3],
-                    m_mass[i], t-> Network_qse.LinearInterpolation(T, vcat(g[j]...))(t))
+                atomProp = AtomicProperties(m_charge_number[i],
+                            m_atomic_number[i],
+                            d2[j,3],
+                            m_mass[i] * Network_qse.meverg,
+                            m_atomic_number[i] * Network_qse.m_u + m_mass[i] * Network_qse.meverg / Network_qse.c^2,
+                            #m_charge_number[i] * (Network_qse.m_p + Network_qse.m_e) + (m_atomic_number[i]-m_charge_number[i]) * Network_qse.m_n + m_mass[i] * Network_qse.meverg / Network_qse.c^2,
+                            (m_atomic_number[i] * Network_qse.m_u + m_mass[i] * Network_qse.meverg / Network_qse.c^2
+                                - m_charge_number[i] * (Network_qse.m_p + Network_qse.m_e)
+                                - (m_atomic_number[i]-m_charge_number[i]) * Network_qse.m_n) * Network_qse.c^2,
+                            t-> Network_qse.LinearInterpolation(T, vcat(g[j]...))(t))
                 push!(result, atomProp)
             end
         end

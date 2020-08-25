@@ -19,31 +19,7 @@ include("Tools.jl")
 
 
 #TODO: umschreiben wie prefactor: nimmt struct partition function
-#TODO: write func which creates struct:
-#TODO: kommt alles in Boltzmann
-function charge_neutrality(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector,m::Vector,pol)
-    N = A .- Z
-    result = zeros(eltype(μ),length(A))
-    E_b =  (m .- Z*PhysicalConstants.m_p .- N*PhysicalConstants.m_n)*PhysicalConstants.meverg
-    β = 1.0/(PhysicalConstants.k_B*T)
-    prefact = [exp.(pol[el](T)) for el in 1:length(A)]
-    expon = maximum((μ[2] .* Z .+ μ[1] .* N .- E_b).*β)
-    diff = (μ[2] .* Z .+ μ[1] .* N .- E_b).*β .- expon
-    result = (prefact.*(Z./A)./ ρ).*exp.(expon).*exp.(diff)
-    #result = (prefact.*(Z./A)./ ρ).*exp.((μ[2] .* Z .+ μ[1] .* N .- E_b).*β)
-    return exp.(expon), exp.(diff)#(μ[2] .* Z .+ μ[1] .* N .- E_b).*β
-end
 
-
-function mass_conservation(μ::Vector,T::Float64,ρ::Float64,A::Vector,Z::Vector,m::Vector,pol)::Array{BigFloat}
-    N = A .- Z
-    result = zeros(eltype(μ),length(A))
-    E_b =  (m .- Z*PhysicalConstants.m_p .- N*PhysicalConstants.m_n)*PhysicalConstants.meverg
-    β = 1.0/(PhysicalConstants.k_B*T)
-    prefact = [exp.(pol[el](T)) for el in 1:length(A)]
-    result = (prefact./ ρ).*exp.((μ[2] .* Z .+ μ[1] .* N .- E_b).*β)
-    return result
-end
 
 
 

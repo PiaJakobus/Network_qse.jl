@@ -1,8 +1,8 @@
 @testset "prefactor" begin
-    k = AtomicProperties(3,3,1.0,10.0)
-    pf1 = PartitionFunction(k,1.0,1e9)
-    pf2 = PartitionFunction(k,1.0,2e9)
-    l   = [pf1,pf2]
-    @test prefactor(pf1) ≈ 4.637634538831878e11
-    @test all(prefactor.(l) .≈ [4.637634538831878e11,1.3117211324291873e12])
+    #TODO: more reliable tests for chargeNeut, massCon
+    #TODO: why is type declaration for args::AtomicProperties not working?
+    he3 = Network_qse.AtomicProperties(2, 3, 0.5, 2.39e-5, 5.01e-24, -1.23e-5, o -> 1.0)
+    @test Network_qse.prefactor(he3)(1e9, 1e7) / 31013 < 1.01
+    @test Network_qse.chargeNeut([0.0000001,-0.000007], 1e9, 1e7, he3) < 10.0
+    @test Network_qse.massCon([0.0000001,-0.000007], 1e9, 1e7, he3) < 10.0
 end
