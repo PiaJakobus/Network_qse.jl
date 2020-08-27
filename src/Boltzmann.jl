@@ -17,8 +17,8 @@ end
 
 returns mass fraction for one element
 """
-function massCon(μ::Vector, T::Float64, rho::Float64, pf)
-    prefactor(pf)(T, rho) *
+function massCon(μ::Vector, T::Float64, rho::Float64, ap::AtomicProperties)
+    prefactor(ap)(T, rho) *
         exp((μ[2] * pf.Z + μ[1] * pf.A - pf.Eb) / (Network_qse.k_B*T))
 end
 
@@ -29,7 +29,7 @@ end
 
 returns charge fraction for one element
 """
-function chargeNeut(μ::Vector, T::Float64, rho::Float64, pf)
-    prefactor(pf)(T, rho) * (pf.Z / pf.A) *
+function chargeNeut(μ::Vector, T::Float64, rho::Float64, ap::AtomicProperties)
+    prefactor(ap)(T, rho) * (pf.Z / pf.A) *
         exp((μ[2] * pf.Z + μ[1] * pf.A - pf.Eb) / (Network_qse.k_B*T))
 end

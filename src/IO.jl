@@ -93,7 +93,8 @@ function read_mass_frdm()
     k3 = map(n->tryparse.(Float64,n), k2)
     k4 = map(x->x[1:4], k3)
     k4_arr = permutedims(hcat(k4...))
-    return k4_arr
+    k5 = k4_arr[k4_arr[:,3] .!= 0.0, :] # discard flag = 0
+    return k5
 end
 
 
@@ -137,19 +138,14 @@ function extract_partition_function()
     T = 1e9.*Float64[0.01, 0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10]
     #TODO: write a config where I store hard coded things
     result        = Array{AtomicProperties, 1}(undef, 0)
-    for j in eachindex(p_charge_number)
-        for i in eachindex(m_charge_number)
+    for i in eachindex(m_charge_number)
+        for j in eachindex(p_charge_number)
             if (((m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])))
                 #TODO:
                 atomProp = AtomicProperties(m_charge_number[i],
                             m_atomic_number[i],
                             d2[j,3],
-                            m_mass[i] * Network_qse.meverg,
-                            m_atomic_number[i] * Network_qse.m_u + m_mass[i] * Network_qse.meverg / Network_qse.c^2,
-                            #m_charge_number[i] * (Network_qse.m_p + Network_qse.m_e) + (m_atomic_number[i]-m_charge_number[i]) * Network_qse.m_n + m_mass[i] * Network_qse.meverg / Network_qse.c^2,
-                            (m_atomic_number[i] * Network_qse.m_u + m_mass[i] * Network_qse.meverg / Network_qse.c^2
-                                - m_charge_number[i] * (Network_qse.m_p + Network_qse.m_e)
-                                - (m_atomic_number[i]-m_charge_number[i]) * Network_qse.m_n) * Network_qse.c^2,
+                            m_mass[i],
                             t-> Network_qse.LinearInterpolation(T, vcat(g[j]...))(t))
                 push!(result, atomProp)
             end
