@@ -18,4 +18,4 @@ struct AtomicProperties
         Z, A, s, Δ, ω)
 end
 
-Base.show(io::IO, a::AtomicProperties) = print(io, "Z = $(a.Z): A = $(a.A), M = $(a.M), Eb = $(a.Eb), Δ = $(a.Δ)")
+Base.show(io::IO, a::AtomicProperties) = print(io, "$(a.name), M = $(a.M), Eb = $(a.Eb), Δ = $(a.Δ)")

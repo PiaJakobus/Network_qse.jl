@@ -5,5 +5,5 @@ using Interpolations
 using NLsolve
 #using Dierckx
 using LinearAlgebra
-#using IntervalRootFinding
+using IntervalRootFinding
 using PeriodicTable
