@@ -36,14 +36,7 @@ function f!(F,x,T,yₑ,ρ,A,Z,m,pol)
 end
 
 
-function ana_dev!(J,μ, T,rho,y,A,Z,m,pol)
-    N = A .- Z
-    β = 1.0/(PhysicalConstants.kmev*T)
-    J[1,1] = sum(β.*N.*mass_conservation(μ, T,rho,A,Z,m,pol))
-    J[1,2] = sum(β.*Z.*mass_conservation(μ, T,rho,A,Z,m,pol))
-    J[2,1] = sum((β.*N.*Z./A).*mass_conservation(μ, T,rho,A,Z,m,pol))
-    J[2,2] = sum((β.*Z.*Z./A).*mass_conservation(μ, T,rho,A,Z,m,pol))
-end
+
 
 
 
