@@ -20,12 +20,10 @@ end
 inverse of saha equation with only one species
 and μₚ = μₙ. returns [μ, μ]
 """
-#TODO: test this function by comparing with Bernhards code!
 function initial_guess(T, rho, ap_ni56)
-    mu = (log((rho * N_A / ap_ni56.A) *
-        (hh^2 *c^2 / (2 * π * k_B * T * ap_ni56.A * ap_ni56.M *
-        meverg))^1.5) + ap_ni56.Eb * meverg) / (ap_ni56.A * k_B * T)
-    mu * ergmev .* ones(2)
+    scr2 = rho / (m_u * ap_ni56.A)
+    λ3 = sqrt(2.0 * pi * k_B * T * ap_ni56.A * m_u / hh^2.0)^3.0
+    mu = (kmev * T * log(scr2 / λ3) - 510.0) / ap_ni56.A
 end
 
 

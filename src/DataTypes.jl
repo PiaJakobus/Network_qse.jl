@@ -1,5 +1,10 @@
 using Base
 
+
+"""
+Mass [MeV]
+--> M * [meverg] / c^2 = [erg]
+"""
 struct AtomicProperties
     #TODO: convert all to MeV
     name::String
