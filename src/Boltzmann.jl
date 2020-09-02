@@ -14,6 +14,20 @@ end
 
 
 
+"""
+    initial_guess(ap_ni56)
+
+inverse of saha equation with only one species
+and μₚ = μₙ. returns [μ, μ]
+"""
+#TODO: test this function by comparing with Bernhards code!
+function initial_guess(T, rho, ap_ni56)
+    mu = (log((rho * N_A / ap_ni56.A) *
+        (hh^2 *c^2 / (2 * π * k_B * T * ap_ni56.A * ap_ni56.M *
+        meverg))^1.5) + ap_ni56.Eb * meverg) / (ap_ni56.A * k_B * T)
+    mu * ergmev .* ones(2)
+end
+
 
 """
     df_nse_condition!(J,μ, T,rho, ap)
@@ -60,6 +74,7 @@ function nse_condition!(res, μ, T::Float64, ρ::Float64, y::Float64, ap; precis
         res = log.(res)
     end
 end
+
 
 
 

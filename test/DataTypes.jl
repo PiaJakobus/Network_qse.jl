@@ -5,7 +5,7 @@
     g = [1.0,4.0,9.0,16.0]
     h  = Network_qse.AtomicProperties(2, 3, 1.0, 10.0, t-> Network_qse.LinearInterpolation(T, g)(t))
     @test t1.name == "He3"
-    @test n.M*Network_qse.meverg/Network_qse.c^2 ≈ 1.6749e-24
+    @test n.M*Network_qse.meverg/Network_qse.c^2 / 1.674920e-24 < 1.01
     @test t1.Z == 2
     @test t1.A == 3
     @test t1.s == 1.0
