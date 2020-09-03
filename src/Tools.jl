@@ -20,28 +20,16 @@ end
 
 ∂/∂xᵢ [f₁,...,fₙ]
 """
-function MultiNewtonRaphson(xIter::Vector, fun::Function)#μ,T,rho,y,A,Z,m,pol)
-    #J = zeros(Float64, 2,2)
-    #F = Array{Float64,2}(undef, 2, 1)
-    #fun(x) = f(x,T,y,rho,A,Z,m,pol)
-    #N = A .- Z
-    #β = 1.0/(const_kmev*T)
-    #global ϵ = 1.0
-    #global zaehler = 0
-    #f(x) = f(x, args)
-    #df(x)
-    df(x) = x-> Network_qse.ForwardDiff.jacobian(fun, xIter)
+function MultiNewtonRaphson(x::Vector, fun::Function, dfun::Function, ϵ)#μ,T,rho,y,A,Z,m,pol)
+    zaehler = 0
     while ϵ > 1e-10
-        #zaehler += 1
-        #ana_dev!(J,μ, T,rho,y,A,Z,m,pol)
-
-        J⁻¹ = pinv(df(x))
-        #f!(F,μ,T,y,rho,A,Z,m,pol)
-        xIter .-= J⁻¹.*fun(x)
-        #μ = μⁱ⁺¹
-        ϵ = xIter - J⁻¹.*fun(x)
-        println(zaehler, "  ", ">>> ϵ >>>", ϵ)
+        J⁻¹ = pinv(dfun(x))
+        x[1] = x[1] - (J⁻¹[1,1] * fun(x)[1] + J⁻¹[1,2] * fun(x)[2])
+        x[2] = x[2] - (J⁻¹[2,1] * fun(x)[1] + J⁻¹[2,2] * fun(x)[2])
+        #println("new guess ", J⁻¹)
+        println(zaehler, "  ", ">>> ϵrror² >>>", x, sqrt(x[1]^2 + x[2]^2))
+        zaehler += 1
     end
     println("iterations: ", zaehler)
-    return xIter
+    return x
 end
