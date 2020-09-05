@@ -13,7 +13,6 @@ function prefactor(pf)
 end
 
 
-
 """
     initial_guess(ap_ni56)
 
@@ -38,13 +37,13 @@ function df_nse_condition(μ, T,ρ, y, ap)
         df = zeros(2, 2)
         dres = zeros(2, 2)
         for apᵢ in ap
-            pr_i = prefactor(apᵢ)(T, ρ)
+            #pr_i = prefactor(apᵢ)(T, ρ)
             exp_i = exp((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A -apᵢ.Z) - apᵢ.Eb) / (kmev * T)) .* [1.0, apᵢ.Z / apᵢ.A]
-            sum_exp .= (pr_i .* exp_i) .+ sum_exp
-            df[1, 1] = pr_i * exp_i[1] * apᵢ.Z / (k_B * T) + df[1,1]
-            df[1, 2] = pr_i * exp_i[2] * apᵢ.A / (k_B * T) + df[1,2]
-            df[2, 1] = pr_i * exp_i[1] * apᵢ.Z*apᵢ.Z/apᵢ.A / (k_B * T) + df[2,1]
-            df[2, 2] = pr_i * exp_i[2] * (apᵢ.Z*(apᵢ.A-apᵢ.Z) / apᵢ.A) / (k_B * T) + df[2,2]
+            sum_exp .= exp_i .+ sum_exp
+            df[1, 1] = exp_i[1] * apᵢ.Z / (kmev * T) + df[1,1]
+            df[1, 2] = exp_i[2] * apᵢ.A / (kmev * T) + df[1,2]
+            df[2, 1] = exp_i[1] * apᵢ.Z*apᵢ.Z/apᵢ.A / (kmev * T) + df[2,1]
+            df[2, 2] = exp_i[2] * (apᵢ.Z*(apᵢ.A-apᵢ.Z) / apᵢ.A) / (kmev * T) + df[2,2]
         end
         dres[1, 1] = df[1,1] / sum_exp[1]
         dres[1, 2] = df[1,2] / sum_exp[2]
@@ -62,7 +61,7 @@ end
 Mass conservation and charge neutrality
 log (∑ᵢXᵢ) and log(∑ᵢ(Zᵢ/Aᵢ)Xᵢ / y)
 """
-function nse_condition!(μ, T::Float64, ρ::Float64, y::Float64, ap; precision=4000)
+function nse_condition(μ, T::Float64, ρ::Float64, y::Float64, ap; precision=4000)
     #setprecision(precision) do
         res = zeros(2)
         for apᵢ in ap
@@ -73,6 +72,7 @@ function nse_condition!(μ, T::Float64, ρ::Float64, y::Float64, ap; precision=4
             #println(scr[1])
         end
         res[2] /= (y * res[1])
+        #res .= res .- [1.0, y]
         res = log.(res)
         return res
     #end
