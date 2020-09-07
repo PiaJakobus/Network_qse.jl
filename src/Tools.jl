@@ -18,19 +18,24 @@ end
 #TODO: test this!!
 """
 
-∂/∂xᵢ [f₁,...,fₙ]
+∂/∂xᵢ [f₁,...,fₙ] good guess: [-4.394094904641707, -12.915712928215058]
 """
-function MultiNewtonRaphson(guess::Vector, fun::Function, dfun::Function, ϵ)#μ,T,rho,y,A,Z,m,pol)
+function MultiNewtonRaphson(guess::Vector, T, rho, y, ap)
     zaehler = 0
     x = guess
-    while ϵ > 1e-10
-        df = dfun(x)
-        f = fun(x)
-        J⁻¹ = pinv(df)
-        x[1] = x[1] - (zaehler/40) * (J⁻¹[1,1] * f[1] + J⁻¹[1,2] * f[2])
-        x[2] = x[2] - (zaehler/40) * (J⁻¹[2,1] * f[1] + J⁻¹[2,2] * f[2])
-        #println("new guess ", J⁻¹)
-        println(zaehler, "  ", ">>> ϵrror² >>>", f[1], ":   ", f[2], "   ", x)
+    ϵ = 1.0
+    while abs(ϵ) > 1e-11
+        df = df_nse_condition(x, T, rho, y, ap)
+        f  = nse_condition(x, T, rho, y, ap)
+        #J⁻¹ = pinv(df)
+        det = df[1,1] * df[2,2] - df[1,2] * df[2,1]
+        #println(df, det, f,x)
+
+        J⁻¹ = (1.0/det) * [df[2,2] -df[2,1];-df[1,2] df[1,1]]
+        x[1] = x[1] - min(1, zaehler/30) * max(min((J⁻¹[1,1] * f[1] + J⁻¹[1,2] * f[2]), 50), -50)
+        x[2] = x[2] - min(1, zaehler/30) * max(min((J⁻¹[2,1] * f[1] + J⁻¹[2,2] * f[2]), 50), -50)
+        ϵ = abs(sqrt(f[1]^2 + f[2]^2))
+        println(zaehler, "  ", ">>> ϵrror² >>>", Float64(f[1]), ":   ", Float64(f[2]), "::::", Float64(ϵ))
         zaehler += 1
     end
     println("iterations: ", zaehler)
