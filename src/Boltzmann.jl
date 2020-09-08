@@ -41,18 +41,19 @@ function df_nse_condition(μ, T,rho, y, ap)
             exp_i = exp(BigFloat((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A -apᵢ.Z) - apᵢ.Eb) / (kmev * T))) .* BigFloat.([1.0, apᵢ.Z / apᵢ.A])
             sum_exp .= BigFloat.(prefactor(apᵢ)(T,rho) * exp_i) .+ sum_exp
             df[1, 1] = BigFloat(prefactor(apᵢ)(T,rho) * exp_i[1] * apᵢ.Z / (kmev * T)) + df[1,1]
-            df[1, 2] = BigFloat(prefactor(apᵢ)(T,rho) * exp_i[1] * apᵢ.A / (kmev * T)) + df[1,2]
+            df[1, 2] = BigFloat(prefactor(apᵢ)(T,rho) * exp_i[1] * (apᵢ.A - apᵢ.Z) / (kmev * T)) + df[1,2]
             df[2, 1] = BigFloat(df[1, 1] * (apᵢ.Z / apᵢ.A)) + df[2,1]
             df[2, 2] = BigFloat(df[1, 2] * (apᵢ.Z / apᵢ.A)) + df[2,2]
         end
         dres[1, 1] = df[1,1] / sum_exp[1]
         dres[1, 2] = df[1,2] / sum_exp[1]
-        dres[2, 1] = - df[1,1] * (sum_exp[2] / sum_exp[1]) + df[2,1] / sum_exp[1]
-        dres[2, 2] = - df[1,2] * (sum_exp[2] / sum_exp[1]) + df[2,2] / sum_exp[1]
+        dres[2, 1] = - df[1,1] * (sum_exp[2] / sum_exp[1]^2) + df[2,1] / sum_exp[1]
+        dres[2, 2] = - df[1,2] * (sum_exp[2] / sum_exp[1]^2) + df[2,2] / sum_exp[1]
+        #dres[2, 1] = - df[1,1] * (sum_exp[2] / sum_exp[1]) + df[2,1] / sum_exp[1]
+        #dres[2, 2] = - df[1,2] * (sum_exp[2] / sum_exp[1]) + df[2,2] / sum_exp[1]
         return dres
     end
 end
-
 
 
 
@@ -82,5 +83,5 @@ end
 
 
 function exponent(μ, T::Float64, apᵢ)
-    (μ[2] * apᵢ.Z + μ[1] * (apᵢ.A - apᵢ.Z) - apᵢ.Eb) / (kmev*T)
+    (μ[1] * apᵢ.Z + μ[2] * (apᵢ.A - apᵢ.Z) - apᵢ.Eb) / (kmev*T)
 end

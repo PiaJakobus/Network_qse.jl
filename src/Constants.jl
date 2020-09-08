@@ -1,4 +1,6 @@
 const m_u = 1.660539e-24
+const Δₚ = 7.289
+const Δₙ = 8.071
 const m_n = 1.6749e-24
 const m_p = 1.6726e-24
 const m_e = 9.1094e-28

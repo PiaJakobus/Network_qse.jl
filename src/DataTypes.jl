@@ -19,7 +19,8 @@ struct AtomicProperties
         ω::Function) =
         new(Z==0 ? "1n" : PeriodicTable.elements[Z].symbol*string(A),
         A * m_u * c^2 / meverg + Δ,
-        (A * m_u * c^2 / meverg + Δ) - ((Z * (m_p + m_e) + (A - Z) * m_n) * c^2 / meverg),
+        Δ - (Z * Δₚ + (A - Z) * Δₙ), 
+        #(A * m_u * c^2 / meverg + Δ) - ((Z * (m_p + m_e) + (A - Z) * m_n) * c^2 / meverg),
         Z, A, s, Δ, ω)
 end
 
