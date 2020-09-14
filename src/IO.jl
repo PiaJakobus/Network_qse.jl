@@ -91,10 +91,11 @@ function read_mass_frdm()
     k1 = map.(j-> filter!(i -> i != "", k[j]), 1:length(k))
     k2 = map(i->deleteat!(i, 3), k1)
     k3 = map(n->tryparse.(Float64,n), k2)
-    k4 = map(x->x[1:4], k3)
+    #k4 = map(x -> x[3] == 0.0 ? x[1:5] : x[1:4] , k3) # automatically parsed like this...
+    k4 = map(x->x[1:4] , k3)
     k4_arr = permutedims(hcat(k4...))
-    k5 = k4_arr[k4_arr[:,3] .!= 0.0, :] # discard flag = 0
-    return k5
+    #k5 = k4_arr[k4_arr[:,3] .!= 0.0, :] # discard flag = 0
+    return k4_arr
 end
 
 
@@ -141,15 +142,22 @@ function extract_partition_function()
     for i in eachindex(m_charge_number)
         for j in eachindex(p_charge_number)
             if (((m_charge_number[i] == p_charge_number[j]) && (m_atomic_number[i] == p_atomic_number[j])))
-                #TODO:
                 atomProp = AtomicProperties(m_charge_number[i],
                             m_atomic_number[i],
                             d2[j,3],
                             m_mass[i],
                             t-> Network_qse.LinearInterpolation(T, vcat(g[j]...))(t))
                 push!(result, atomProp)
+            #else # use all elements of part table, incl with no partition function, set it to 1!
+            #    atomProp = AtomicProperties(m_charge_number[i],
+            #                m_atomic_number[i],
+            #                0.0,
+            #                m_mass[i],
+            #                t-> 1.0)
+            #    push!(result, atomProp)
             end
         end
+
     end
 
     return result

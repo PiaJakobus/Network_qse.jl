@@ -18,8 +18,9 @@ struct AtomicProperties
     AtomicProperties(Z::Int64, A::Int64, s::Float64, Δ::Float64,
         ω::Function) =
         new(Z==0 ? "1n" : PeriodicTable.elements[Z].symbol*string(A),
+        #new(Z==0 ? "1n" : string(Z)*string(A),
         A * m_u * c^2 / meverg + Δ,
-        Δ - (Z * Δₚ + (A - Z) * Δₙ), 
+        Δ - (Z * Δₚ + (A - Z) * Δₙ),
         #(A * m_u * c^2 / meverg + Δ) - ((Z * (m_p + m_e) + (A - Z) * m_n) * c^2 / meverg),
         Z, A, s, Δ, ω)
 end
