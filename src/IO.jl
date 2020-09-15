@@ -146,7 +146,7 @@ function extract_partition_function()
                             m_atomic_number[i],
                             d2[j,3],
                             m_mass[i],
-                            t-> Network_qse.LinearInterpolation(T, vcat(g[j]...))(t))
+                            t-> Network_qse.LinearInterpolation(T, vcat(g[j]...), extrapolation_bc=Line())(t))
                 push!(result, atomProp)
             #else # use all elements of part table, incl with no partition function, set it to 1!
             #    atomProp = AtomicProperties(m_charge_number[i],

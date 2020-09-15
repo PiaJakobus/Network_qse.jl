@@ -39,12 +39,12 @@ function df_nse_condition(μ, T,rho, y, ap)
 
         for apᵢ in ap
             pr_i = prefactor(apᵢ)(T, rho)
-            exp_i = exp((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A -apᵢ.Z) - apᵢ.Eb) / (kmev * T)) .* BigFloat.([1.0, apᵢ.Z / apᵢ.A])
-            sum_exp .= (prefactor(apᵢ)(T,rho) .* exp_i) .+ sum_exp
-            df11 = prefactor(apᵢ)(T,rho) * exp_i[1] * apᵢ.Z / (kmev * T) + df11
-            df12 = prefactor(apᵢ)(T,rho) * exp_i[1] * (apᵢ.A - apᵢ.Z) / (kmev * T) + df12
-            df21 = prefactor(apᵢ)(T,rho) * exp_i[1] * apᵢ.Z * (apᵢ.Z / apᵢ.A) / (kmev * T) + df21
-            df22 = prefactor(apᵢ)(T,rho) * exp_i[1] * (apᵢ.A - apᵢ.Z) * (apᵢ.Z / apᵢ.A) / (kmev * T) + df22
+            exp_i = exp((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A -apᵢ.Z) - apᵢ.Eb) / (kmev * T)) .*  [1.0, apᵢ.Z / apᵢ.A]
+            sum_exp .= (pr_i .* exp_i) .+ sum_exp
+            df11 = pr_i * exp_i[1] * apᵢ.Z / (kmev * T) + df11
+            df12 = pr_i * exp_i[1] * (apᵢ.A - apᵢ.Z) / (kmev * T) + df12
+            df21 = pr_i * exp_i[1] * apᵢ.Z * (apᵢ.Z / apᵢ.A) / (kmev * T) + df21
+            df22 = pr_i * exp_i[1] * (apᵢ.A - apᵢ.Z) * (apᵢ.Z / apᵢ.A) / (kmev * T) + df22
         end
         dres[1, 1] = df11 / sum_exp[1] #log (∑ᵢXᵢ)
         dres[1, 2] = df12 / sum_exp[1]
