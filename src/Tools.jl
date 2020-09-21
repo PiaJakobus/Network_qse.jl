@@ -34,45 +34,9 @@ function MultiNewtonRaphson(x::Vector, T, rho, y, ap)
         #println(zaehler, "  ", ">>> √ϵrror² >>>", Float64(ϵ), ":   ", x[1], ">>>>", x[2], " xi: ", sum(x_i(x, T, rho, ap)))
         zaehler += 1
     end
-    println("----------------------------------------------------------------")
-    println("----------------------------------------------------------------")
-    println("iterations: ", zaehler, "  ϵ: ", ϵ, " μ: ", x,  " sum: ", " T: ",
-            T, " rho: ", rho, " y: ", y, " sum: ", sum(x_i(x, T, rho, ap)))
+    #println("----------------------------------------------------------------")
+    #println("----------------------------------------------------------------")
+    #println("iterations: ", zaehler, "  ϵ: ", ϵ, " μ: ", x,  " sum: ", " T: ",
+    #        T, " rho: ", rho, " y: ", y, " sum: ", sum(x_i(x, T, rho, ap)))
     return x
 end
-
-
-function testing(tem, rho,a)
-    yrange = LinRange(0.4,0.6,30)
-    res = Array{Float64, 2}(undef, 2, size(yrange,1))
-    tmp = Network_qse.initial_guess(a[863])
-    for (i,y) in enumerate(yrange)
-        res[:,i] = Network_qse.MultiNewtonRaphson(tmp, tem, rho, y, a)
-        tmp = res[:,i]
-       end
-    return res
-end
-
-
-# He4: 6
-# ni56: 762
-# Ni58: 764
-# Ni66: 772
-# Ni68: 774
-# Fe54: 660
-# Fe55: 661
-# fe56: 662
-# Fe58: 664
-# Co55: 710
-# Cr52: 563
-# Cr54: 565
-# Ti50: 470
-# Ge80: 997
-# Zn74: 884
-
-# res = Network_qse.testing(rho,a)
-#f(i) = Network_qse.x_i(res[:,i], trange[i], rho, a)
-# all = map(i -> f(i), 1:size(trange,1))
-# all = hcat(all...)
-# plot(trange, all[762,:], yaxis=:log, label = "Ni56")
-# plot(yrange, all[762,:], yaxis=:log, ylim = (1e-3,1), xflip=true, label = "Ni56")

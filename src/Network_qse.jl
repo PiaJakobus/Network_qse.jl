@@ -15,21 +15,16 @@ include("Tools.jl")
 
 
 
-function solve_var_T(N,rho, y, a)
-    N_part = size(a,1)
-    μ = initial_guess(a[762])
-    chemPot = Array{Float64, 2}(undef, N,2)
-    x_i = Array{Float64}(undef, N, N_part)
-    for (i,t) in enumerate(LinRange(1e8,1e9,N))
-        chemPot[i,:] = MultiNewtonRaphson(μ, t, rho, y, a)
-        println("AA", chemPot[i,:])
-        x_i[i,:] = map(apᵢ -> Network_qse.prefactor(apᵢ)(t, rho) * exp((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A - apᵢ.Z) - apᵢ.Eb) / (kmev*t)), a)
-        println("BB")
-        #map(a_i -> Network_qse.x_i(chemPot[i,:], t, rho, a_i), a)
-        # sum(map(i -> Network_qse.x_i(μ,1e6,T,a[i]), 1:size(a,1)))
-        println(">>>>>>>>>>>>>>>>>>> i: ", i, " T: ", t, " ∑ᵢ: ", chemPot[i,:], sum(x_i[i,:]))
+function testing(yrange::Vector, trange::Vector, rrange::Vector)
+    a = Network_qse.extract_partition_function()
+    res = Array{Float64, 4}(undef, size(a,1), size(yrange, 1), size(trange, 1), size(rrange, 1))
+    tmp = Network_qse.initial_guess(a[863])
+    for (i,y) in enumerate(yrange), (j, t) in enumerate(trange), (k, r) in enumerate(rrange)
+        tmp = Network_qse.MultiNewtonRaphson(tmp, t, r, y, a)
+        res[:,i,j,k] = Network_qse.x_i(tmp, t, r, a)
+        println(">>>> ", i, " ", " sum ",sum(res[:,i,j,k]))
     end
-    return x_i, chemPot
+    return res
 end
 
 
