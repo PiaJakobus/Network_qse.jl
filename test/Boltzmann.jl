@@ -17,3 +17,13 @@ end
     ind = filter(i -> (pf[i].name == "Fe56"), 1:size(pf,1))
     @test Network_qse.initial_guess(pf[ind][1])[1] / -9.17 < 1.01
 end
+
+
+@testset "df_nse_condition" begin
+    a = Network_qse.extract_partition_function()
+    x = [-9.1, -9.1]
+    sol = Network_qse.MultiNewtonRaphson([-9.2,-9.3], 9e9, 1e9, 0.49, a)
+    g(x) = Network_qse.nse_condition(x, 3e9, 1e7, 0.49, a)
+    @test Network_qse.df_nse_condition(x, 3e9, 1e7, 0.49, a) ≈ Network_qse.ForwardDiff.jacobian(g, x)
+    @test sum(Network_qse.x_i(sol, 9e9, 1e9, a)) ≈ 1.0
+end

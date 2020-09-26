@@ -27,29 +27,31 @@ end
 
 
 
+
 """
     df_nse_condition!(J,μ, T,rho, ap)
 
 computes Jacobian ∇f ∈ ℝ²×ℝ² with f ∈ ℝ², μ ∈ ℝ²
 """
 function df_nse_condition(μ, T,rho, y, ap)
-        sum_exp = zeros(Float64, 2)
+        sum_exp  = 0.0
+        sum_expY = 0.0
         df11, df12, df21, df22 = zeros(Float64, 4)
         dres = zeros(Float64, 2, 2)
-
         for apᵢ in ap
             pr_i = prefactor(apᵢ)(T, rho)
-            exp_i = exp((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A -apᵢ.Z) - apᵢ.Eb) / (kmev * T)) .*  [1.0, apᵢ.Z / apᵢ.A]
-            sum_exp .= (pr_i .* exp_i) .+ sum_exp
-            df11 = pr_i * exp_i[1] * apᵢ.Z / (kmev * T) + df11
-            df12 = pr_i * exp_i[1] * (apᵢ.A - apᵢ.Z) / (kmev * T) + df12
-            df21 = pr_i * exp_i[1] * apᵢ.Z * (apᵢ.Z / apᵢ.A) / (kmev * T) + df21
-            df22 = pr_i * exp_i[1] * (apᵢ.A - apᵢ.Z) * (apᵢ.Z / apᵢ.A) / (kmev * T) + df22
+            exp_i = exp((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A -apᵢ.Z) - apᵢ.Eb) / (kmev * T))
+            sum_exp = (pr_i * exp_i) + sum_exp
+            sum_expY = (pr_i * exp_i * apᵢ.Z / apᵢ.A) + sum_expY
+            df11 = pr_i * exp_i * apᵢ.Z / (kmev * T) + df11
+            df12 = pr_i * exp_i * (apᵢ.A - apᵢ.Z) / (kmev * T) + df12
+            df21 = pr_i * exp_i * apᵢ.Z * (apᵢ.Z / apᵢ.A) / (kmev * T) + df21
+            df22 = pr_i * exp_i * (apᵢ.A - apᵢ.Z) * (apᵢ.Z / apᵢ.A) / (kmev * T) + df22
         end
-        dres[1, 1] = df11 / sum_exp[1] #log (∑ᵢXᵢ)
-        dres[1, 2] = df12 / sum_exp[1]
-        dres[2, 1] = - df11 / sum_exp[1] * (sum_exp[2] / sum_exp[1]) + df21 / sum_exp[1]
-        dres[2, 2] = - df12 / sum_exp[1] * (sum_exp[2] / sum_exp[1]) + df22 / sum_exp[1]
+        dres[1, 1] = df11 / sum_exp #log (∑ᵢXᵢ)
+        dres[1, 2] = df12 / sum_exp
+        dres[2, 1] = - dres[1,1] * (sum_expY / sum_exp) + df21 / sum_exp
+        dres[2, 2] = - dres[1,2] * (sum_expY / sum_exp) + df22 / sum_exp
         return dres
 end
 
@@ -59,8 +61,8 @@ end
 Mass conservation and charge neutrality
 log (∑ᵢXᵢ) and log(∑ᵢ(Zᵢ/Aᵢ)Xᵢ / y)
 """
-function nse_condition(μ, T::Real, ρ::Real, y::Real, ap; precision=4000)
-        res = zeros(Real,2)
+function nse_condition(μ, T::Real, ρ::Real, y::Real, ap)
+        res = zeros(Real,2) # Real here for AtoDiff to work
         scr = 0.0
         for (in, apᵢ) in enumerate(ap)
             pr_i = prefactor(apᵢ)(T, ρ)

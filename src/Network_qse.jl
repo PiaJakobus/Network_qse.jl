@@ -24,8 +24,18 @@ function testing(yrange::Vector, trange::Vector, rrange::Vector)
         res[:,i,j,k] = Network_qse.x_i(tmp, t, r, a)
         println(">>>> ", i, " ", " sum ",sum(res[:,i,j,k]))
     end
+    save("./NSE_table.jld", "data", res)
+    open("./README.txt"; write=true) do f
+        write(f, "# cgs units - rho = const = $(rrange[1]) g/cm3\n")
+        write(f, "# load data in variable with load(\"data.jld\")[\"data\"]\n")
+        write(f, "# y-range, T-range\n")
+        writedlm(f, [yrange trange])
+    end
     return res
 end
+
+
+
 
 
 end

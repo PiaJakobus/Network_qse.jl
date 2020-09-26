@@ -58,9 +58,19 @@ function plot_network(specs,y_range,X_i,vals,grids,reduced_netw,A,Z,test_network
     return plr
 end
 
-specs = filt_x_i(grids,1e-2,X_i)
-p = plot_network(specs,LinRange(1e9,10e9,100),X_i,vals,grids,reduced_netw,A,Z,false)
-Network_qse.savefig(p,"varyT.png")
 
-
-X_i
+col = range(LCHab(70,70,0), stop=LCHab(70,70,720), length=40)
+col = range(HSL(colorant"red"), stop=HSL(colorant"green"), length=15)
+col = sequential_palette(6, c=0.88, s=0.6, b=0.75, w=0.15, d=0.4)
+k = 0
+function find_length(k)
+    for (i, ai) in enumerate(a)
+        fi = argmax(all[i,:])
+        if all[i,:][fi] > 0.1
+            k += 1
+            #plot!(yrange, all[i,:], yaxis =:log, legend =:false, ylim = (1e-2, 1), c = col[k])
+            #annotate!(yrange[fi], maximum(all[i,:]), ai.name, c = col[k])
+        end
+    end
+    return k
+end

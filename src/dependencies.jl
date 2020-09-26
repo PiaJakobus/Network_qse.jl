@@ -1,4 +1,3 @@
-
 #using Optim
 using ForwardDiff
 using Interpolations
@@ -7,3 +6,5 @@ using NLsolve
 using LinearAlgebra
 #using IntervalRootFinding
 using PeriodicTable
+using JLD
+using DelimitedFiles
