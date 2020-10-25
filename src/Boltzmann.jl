@@ -36,8 +36,8 @@ computes Jacobian ∇f ∈ ℝ²×ℝ² with f ∈ ℝ², μ ∈ ℝ²
 function df_nse_condition(μ, T,rho, y, ap)
         sum_exp  = 0.0
         sum_expY = 0.0
-        df11, df12, df21, df22 = zeros(Float64, 4)
-        dres = zeros(Float64, 2, 2)
+        df11, df12, df21, df22 = zeros(Real, 4)
+        dres = zeros(Real, 2, 2)
         for apᵢ in ap
             pr_i = prefactor(apᵢ)(T, rho)
             exp_i = exp((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A -apᵢ.Z) - apᵢ.Eb) / (kmev * T))
@@ -76,6 +76,6 @@ function nse_condition(μ, T::Real, ρ::Real, y::Real, ap)
 end
 
 
-function x_i(μ, T::Float64, ρ::Float64, a)
+function x_i(μ, T::Real, ρ::Float64, a)
     map(apᵢ -> Network_qse.prefactor(apᵢ)(T, ρ) * exp((μ[1] * apᵢ.Z + μ[2] * (apᵢ.A - apᵢ.Z) - apᵢ.Eb) / (Network_qse.kmev*T)), a)
 end

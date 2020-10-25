@@ -16,6 +16,7 @@ include("Tools.jl")
 
 
 function testing(yrange::Vector, trange::Vector, rrange::Vector)
+    #println(".....")
     a = Network_qse.extract_partition_function()
     res = Array{Float64, 4}(undef, size(a,1), size(yrange, 1), size(trange, 1), size(rrange, 1))
     tmp = Network_qse.initial_guess(a[863])

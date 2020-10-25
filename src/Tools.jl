@@ -22,7 +22,8 @@ function MultiNewtonRaphson(x::Vector, T, rho, y, ap)
     zaehler = 0
     ϵ = 1.0
     while abs(ϵ) > 1e-10
-        df = Network_qse.df_nse_condition(x,T,rho,y,ap)
+        #df = Network_qse.df_nse_condition(x,T,rho,y,ap)
+        df = ForwardDiff.jacobian(x -> nse_condition(x,T,rho,y,ap), x)
         f  = nse_condition(x, T, rho, y, ap)
         detInv = 1.0 / (df[1,1] * df[2,2] - df[1,2] * df[2,1])
         inv = ([-df[2,2] df[1,2]; df[2,1] -df[1,1]] * f) .* detInv
