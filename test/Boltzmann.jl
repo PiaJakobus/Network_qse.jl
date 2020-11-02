@@ -12,27 +12,27 @@ end
 
 @testset "initial_guess" begin
     pf = Network_qse.extract_partition_function()
-    ind = filter(i -> (pf[i].name == "Fe56"), 1:size(pf,1))
-    @test Network_qse.initial_guess(pf[ind][1])[1] / -9.17 < 1.01
+    @test Network_qse.initial_guess(pf)[1] / -9.17 < 1.01
 end
 
 
 @testset "df_nse_condition" begin
     a = Network_qse.extract_partition_function()
-    x = [-9.1, -9.1]
-    sol = Network_qse.MultiNewtonRaphson([-9.2,-9.3], 9e9, 1e9, 0.49, a)
-    g(x) = Network_qse.nse_condition(x, 3e9, 1e7, 0.49, a)
-    @test Network_qse.df_nse_condition(x, 3e9, 1e7, a) ≈ Network_qse.ForwardDiff.jacobian(g, x)
-    @test sum(Network_qse.x_i(sol, 9e9, 1e9, a)) ≈ 1.0
+    x = Network_qse.initial_guess(a)
+    g(x) = Network_qse.nse_condition(x, 9e9, 1e7, 0.49, a)
+    @test Network_qse.df_nse_condition(x, 9e9, 1e7, a) ≈ Network_qse.ForwardDiff.jacobian(g, x)
 end
 
 
-#TODO: add tests
 @testset "df_qse_condition" begin
-    1 == 1
+    a = Network_qse.extract_partition_function()
+    x = Network_qse.qse_initial_guess(a)
+    @test Network_qse.df_qse_condition(x, 9e9, 1e7, a) ≈ Network_qse.ForwardDiff.jacobian(x -> Network_qse.qse_condition(x, 9e9, 1e7, 0.5, 1.0, a), x)
 end
 
-#TODO: add tests
 @testset "qse_condition" begin
-    1 ==1
+    a = Network_qse.extract_partition_function()
+    tmp = [-9.162532665782894, -9.162532665782894, -493.08391464192107]
+    @test Network_qse.qse_condition(tmp, 7.25e9, 1e7, 0.5, 0.9, a)[1] ≈ Network_qse.nse_condition(tmp[1:2], 7.25e9, 1e7, 0.5, a)[1]
+    @test Network_qse.qse_condition(tmp, 7.25e9, 1e7, 0.5, 0.9, a)[2] ≈ Network_qse.nse_condition(tmp[1:2], 7.25e9, 1e7, 0.5, a)[2]
 end
