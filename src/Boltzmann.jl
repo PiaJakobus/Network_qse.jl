@@ -44,6 +44,7 @@ function qse_initial_guess(a, ap_ni56 = (k -> a[find_el(k, a)])("Fe56"),
 end
 
 
+
 """
     df_nse_condition!(J,μ, T,rho, ap)
 
@@ -105,7 +106,7 @@ function df_qse_condition(μ, T,rho, ap, E_si = -236.533, i_c12 = find_el("C12",
             exp_i_si = exp((μ[1] * (apᵢ.Z - 14) + μ[2] * ((apᵢ.A -apᵢ.Z) -14) + μ[3] - (apᵢ.Eb .+ E_si)) / (kmev * T))
             sum_exp_si = (pr_i * exp_i_si) + sum_exp_si
             sum_expY_si   = (pr_i * exp_i_si * apᵢ.Z / apᵢ.A) + sum_expY_si
-
+            #println(exp_i_si, "====== ", μ[3])
             df13 = pr_i * exp_i_si / (kmev * T) + df13
             df23 = pr_i * exp_i_si * (apᵢ.Z / apᵢ.A) / (kmev * T) + df23
 
@@ -127,6 +128,8 @@ function df_qse_condition(μ, T,rho, ap, E_si = -236.533, i_c12 = find_el("C12",
         dres[3, 1] = df31 / sum_exp_si
         dres[3, 2] = df32 / sum_exp_si
         dres[3, 3] = df33 / sum_exp_si
+        #println(df11,"  ", df12, "  ", df13,"  ",  df21, "  ", df22, "  ", df23, "  ", df31, "  ", df32, "  ",df33)
+        #println(sum_exp_si)
         return dres
 end
 

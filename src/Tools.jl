@@ -44,7 +44,6 @@ function MultiNewtonRaphson(x::Vector, T, rho, y, ap)
         x = x .+ min.(1, zaehler/30) * max.(min.(inv, 50), -50)
         ϵ = sqrt(f[1]^2 + f[2]^2)
         zaehler += 1
-        #println(ϵ)
     end
     #println(sum(x_i(x, T, rho, ap)), " QSE Cluster:  ", sum(x_i(x, T, rho, ap)[find_el("C12", ap):end]))
     return x
@@ -54,31 +53,30 @@ end
 """
     QSE_MultiNewtonRaphson(x::Vector, T, rho, y, ap)
 ∂/∂xᵢ [f₁,...,fₙ]
+γ ≡ X_cl / X (mass fraction in heavy cluster (without units))
 """
-function QSE_MultiNewtonRaphson(x::Vector, T, rho, y, x_qse, ap, ind = find_el("C12", ap))
+function QSE_MultiNewtonRaphson(x::Vector, T, rho, y, R, ap, ind = find_el("C12", ap))
     zaehler = 0
     ϵ = 1.0
     mu_nse = x[1:2]
-    while abs(ϵ) > 1e-10
+    while abs(ϵ) > 1e-8
         df = Network_qse.df_qse_condition(x, T, rho, ap)
-        mu_nse = MultiNewtonRaphson(mu_nse, T, rho, y, ap)
-        x_qse = 0.8 * sum(x_i(mu_nse, T, rho, ap)[ind:end])
+        #mu_nse = MultiNewtonRaphson(mu_nse, T, rho, y, ap)
+        #x_nse = x_i(mu_nse, T, rho, ap)
+        #α_qse = 0.99#*sum(x_nse[ind+1:end])/sum(x_nse)
+        x_qse = R
+        scr = Network_qse.x_i_QSE(x, T, rho, ap)
+        #println("NSE X     ", sum(x_nse), "    NSE X_cl: ", sum(x_nse[ind+1:end]),
+        #"    QSE X_cl  ", sum(scr[2]), "    QSE X ", sum([(scr...)...]))
         #df1 = ForwardDiff.jacobian(x -> qse_condition(x, T, rho, y, x_qse, ap), x)
         f  = qse_condition(x, T, rho, y, x_qse, ap)
-        #println("=========", x_qse)
-        #detInv = 1.0 / (df[1,1] * df[2,2] - df[1,2] * df[2,1])
-        #println(df .- df1)
         inv = inv_3x3(df)
-        #inv = pinv(df)
-        #println("--------------- ", inv)
-        #println("----autodiff--- ", df1[1,:])
-        #println(Network_qse.df_qse_condition(x, T, rho, ap))
-        #println(x, T, rho)
-        x = x .- min.(1, zaehler/50) * max.(min.(inv * f, 50), -50)
+        x = x .- min.(1, zaehler/50) * max.(min.(inv * f, 10), -10)
         ϵ = sqrt(f[1]^2 + f[2]^2 + f[3]^2)
         #TODO: keep the below line only for testing no need to call scr !!
-        scr = Network_qse.x_i_QSE(x, T, rho, ap)
-        println(zaehler, "  ", " >>> √ϵrror² >>> ", Float64(ϵ), "  sum x1 + x2:  ", sum(vcat(scr[1],scr[2])))
+        #scr = Network_qse.x_i_QSE(x, T, rho, ap)
+        #println(mu_nse, df, x, T, rho)
+        #println(zaehler, "  ", " >>> √ϵrror² >>> ", Float64(ϵ), "  sum x1 + x2:  ", sum(vcat(scr[1],scr[2])))
         zaehler += 1
     end
     return x
