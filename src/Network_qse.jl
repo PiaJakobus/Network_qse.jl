@@ -21,12 +21,18 @@ function testing(yrange::Vector, trange::Vector, rrange::Vector, Φ = 170.0)
     res = Array{Float64, 4}(undef, size(a,1), size(yrange, 1), size(trange, 1), size(rrange, 1))
     tmp = Network_qse.initial_guess(a)
     c12 = find_el("C12", a)
-    for (i,y) in enumerate(yrange), (j, t) in enumerate(trange), (k, r) in enumerate(rrange)
-        #r = Φ * (t/1.0e9)^3 * 1.0e5
-        tmp = Network_qse.MultiNewtonRaphson(tmp, t, r, y, a)
-        res[:,i,j,k] = Network_qse.x_i(tmp, t, r, a)
-        srange[j] = sum(res[:,i,j,k][c12:end])
-        println(">>>> ", j, " ", " sum ",sum(res[:,i,j,k]))
+    for (i,y) in enumerate(yrange)
+        for (j, t) in enumerate(trange)
+            tmp = initial_guess(a)
+            for (k, r) in enumerate(rrange)
+                any(isnan.(tmp)) ? tmp = Network_qse.initial_guess(a) : nothing
+                #r = Φ * (t/1.0e9)^3 * 1.0e5
+                tmp = Network_qse.MultiNewtonRaphson(tmp, t, r, y, a)
+                res[:,i,j,k] = Network_qse.x_i(tmp, t, r, a)
+                srange[j] = sum(res[:,i,j,k][c12:end])
+                println(">>>> ", j, " ", " sum ",sum(res[:,i,j,k]))
+            end
+        end
     end
     save("./NSE_table.jld", "data", res)
     save("./NSE_params.jld", "trange", trange, "yrange", yrange, "rrange", rrange, "srange", srange)
@@ -54,6 +60,7 @@ function testing_QSE(yrange::Vector, trange::Vector, rrange::Vector, srange::Vec
         for (j, t) in enumerate(trange)
             tmp = Network_qse.qse_initial_guess(a)
             for (k, r) in enumerate(rrange), (l, q) in enumerate(srange)
+                any(isnan.(tmp)) ? tmp = Network_qse.qse_initial_guess(a) : nothing
                 #r = Φ * (t/1.0e9)^3 * 1.0e5
                 tmp = Network_qse.QSE_MultiNewtonRaphson(tmp, t, r, y, q, a)
                 x_nse, x_qse = Network_qse.x_i_QSE(tmp, t, r, a)
