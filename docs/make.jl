@@ -1,5 +1,5 @@
-using Network_qse
 using Documenter
+using Network_qse
 
 push!(LOAD_PATH, "../src/")
 makedocs(;
