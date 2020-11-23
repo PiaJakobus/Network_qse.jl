@@ -4,5 +4,5 @@
     @test Network_qse.MultiNewtonRaphson([-9.2,-9.3], 9e9, 1e7, 0.5, a) ≠ NaN
 end
 
-y_dot, A_bar, Z_bar, neutrino rate
-rho B 
+#y_dot, A_bar, Z_bar, neutrino rate
+#rho B 

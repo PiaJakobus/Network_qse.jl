@@ -1,4 +1,6 @@
 """
+    read_part_frdm()
+
 read in follwing files:
 ----------------
 mass-frdm95.dat:
@@ -52,7 +54,6 @@ function line.
 
 >>>>>    PIA: ADDED partition functions and A,Z,s for n,p,d,T,3He
 """
-
 function read_part_frdm()
     table_string = open("$(@__DIR__)/../tables/part_frdm.asc", "r") do f
         readlines(f)
@@ -79,6 +80,7 @@ end
 
 """
     read_mass_frdm()
+
 read ground state energies
 """
 function read_mass_frdm()

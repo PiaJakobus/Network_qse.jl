@@ -1,18 +1,25 @@
+using Network_qse
 using Documenter
-include("../src/Network_qse.jl")
-using .Network_qse
 
-makedocs(
-    sitename = "Network_qse.jl",
-    format = Documenter.HTML(),
-    modules = [Network_qse]
+push!(LOAD_PATH, "../src/")
+makedocs(;
+    modules=[Network_qse],
+    authors="Pia Jakobus",
+    repo="https://github.com/PiaJakobus/Network_qse.jl/blob/{commit}{path}#L{line}",
+    sitename="Network QSE",
+    format=Documenter.HTML(;
+        prettyurls=get(ENV, "CI", nothing) == "true",
+        canonical="https://PiaJakobus.github.io/Network_qse.jl",
+        assets=String[],
+    ),
+    pages=[
+        "Home" => "index.md",
+    ],
 )
 
-# Documenter can also automatically deploy documentation to gh-pages.
-# See "Hosting Documentation" and deploydocs() in the Documenter manual
-# for more information.
-deploydocs(
-    repo = "github.com/PiaJakobus/Network_qse.jl.git", 
-    devbranch = "master",
-    devurl = "stable"
+deploydocs(;
+    branch="gh-pages",
+    devbranch = "main",
+    devurl = "stable",
+    repo="github.com/PiaJakobus/Network_qse.jl.git",
 )
