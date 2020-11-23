@@ -15,6 +15,8 @@ end
 
 #TODO: test this!!
 """
+    MultiNewtonRaphson(x::Vector, T, rho, y, ap)
+
 [-7.0010491,-9.1]
 ∂/∂xᵢ [f₁,...,fₙ] good guess: [-4.394094904641707, -12.915712928215058]
 """

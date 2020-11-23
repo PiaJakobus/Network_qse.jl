@@ -1,3 +1,20 @@
-# Network_qse.jl
+```@meta
+CurrentModule = Network_qse
+```
 
-Documentation for Network_qse.jl
+# Network_qse.jl Documentation
+
+
+
+# Index
+
+```@index
+```
+
+
+```@autodocs
+Modules = [Network_qse]
+```
+
+# Notes
+This layout should be customized in `docs/src/index.md`
