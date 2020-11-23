@@ -19,7 +19,7 @@ makedocs(;
 
 deploydocs(;
     branch="gh-pages",
-    devbranch = "main",
+    devbranch = "master",
     devurl = "stable",
     repo="github.com/PiaJakobus/Network_qse.jl.git",
 )
