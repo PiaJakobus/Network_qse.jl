@@ -562,7 +562,7 @@ uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "0.3.4"
 
 [[Network_qse]]
-deps = ["CSV", "Colors", "DataFrames", "DelimitedFiles", "Distributions", "Documenter", "ForwardDiff", "GR", "Interpolations", "IntervalArithmetic", "JLD", "LaTeXStrings", "LinearAlgebra", "NLSolversBase", "NLsolve", "Optim", "PeriodicTable", "Plots", "Test"]
+deps = ["CSV", "Colors", "DataFrames", "DelimitedFiles", "Distributions", "Documenter", "ForwardDiff", "GR", "Interpolations", "IntervalArithmetic", "JLD", "LaTeXStrings", "LinearAlgebra", "NLSolversBase", "NLsolve", "PeriodicTable", "Plots", "Test"]
 path = "/home/julian/PiaCode/Network_qse.jl"
 uuid = "5f39766f-a033-457a-b69d-b9a3f0b2cbdc"
 version = "0.1.0"
@@ -590,12 +590,6 @@ deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pk
 git-tree-sha1 = "9db77584158d0ab52307f8c04f8e7c08ca76b5b3"
 uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.3+4"
-
-[[Optim]]
-deps = ["Compat", "FillArrays", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
-git-tree-sha1 = "c434c4853a7e61506caf0340b3c153fc08865088"
-uuid = "429524aa-4258-5aef-a3af-852621145aeb"
-version = "1.2.0"
 
 [[Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
