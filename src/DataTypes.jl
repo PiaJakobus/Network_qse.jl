@@ -2,8 +2,12 @@ using Base
 
 
 """
-Mass [MeV]
---> M * [meverg] / c^2 = [erg]
+    AtomicProperties
+Stores all physical properties of an 
+element with charge number Z and atomic 
+number Z.
+Mass in units of MeV with conversion factor:
+M * [meverg] / c^2 = [erg]
 """
 struct AtomicProperties
     #TODO: convert all to MeV
