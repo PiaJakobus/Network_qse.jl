@@ -3,6 +3,10 @@
 
 returns prefactor of X_i, as given in
 http://cococubed.asu.edu/code_pages/nse.shtml
+The physical quantities to compute theBoltzmann 
+prefactor  for a given element are temperature, 
+density (which are varied), 
+mass and atomic number.
 """
 function prefactor(pf)
     (T, rho) -> (pf.A * pf.ω(T) *
@@ -16,7 +20,10 @@ end
     initial_guess(ap_ni56)
 index: 438 or 863 or 762
 inverse of saha equation with only one species
-and μₚ = μₙ. returns μ
+and μₚ = μₙ. returns μ. 
+We assume that the gas is only composed of Nickel 56
+and then solve the Saha Equation for the chemical potentials
+of Protons and neutrons (which we assume as equal). 
 """
 function initial_guess(ap_ni56; T = 2e9, rho = 1e7)
     scr2 = rho / (m_u * ap_ni56.A)
@@ -32,6 +39,8 @@ end
     df_nse_condition!(J,μ, T,rho, ap)
 
 computes Jacobian ∇f ∈ ℝ²×ℝ² with f ∈ ℝ², μ ∈ ℝ²
+Contains all 4 partial derivates with respect to the 
+proton and neutron chemical potentials. 
 """
 function df_nse_condition(μ, T,rho, y, ap)
         sum_exp  = 0.0
@@ -58,8 +67,10 @@ end
 
 """
     nse_condition!(res, μ, T, ρ, y, ap; precision=400)
-Mass conservation and charge neutrality
-log (∑ᵢXᵢ) and log(∑ᵢ(Zᵢ/Aᵢ)Xᵢ / y)
+returns zero function, as obtained from condition of 
+mass conservation and charge neutrality for NSE:
+- log (∑ᵢXᵢ) = 0 
+- log(∑ᵢ(Zᵢ/Aᵢ)Xᵢ / y) = 0
 """
 function nse_condition(μ, T::Real, ρ::Real, y::Real, ap)
         res = zeros(Real,2) # Real here for AtoDiff to work
