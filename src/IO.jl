@@ -1,58 +1,11 @@
 """
     read_part_frdm()
 
-read in follwing files:
-----------------
-mass-frdm95.dat:
-----------------
-Ground state properties
-based on the FRDM model
-Format
-------
-Each record of the file contains:
-
-   Z    : charge number
-   A    : mass number
-   El   : element symbol
-   fl   : flag corresponding to 0 if no experimental data available
-                                1 for a mass excess recommended by
-                                  Audi&Wapstra (1995)
-                                2 for a measured mass from
-                                  Audi&Wapstra (1995)
-   Mexp : experimental or recommended atomic mass excess in MeV of
-          Audi&Wapstra (1995)
-   Mth  : calculated FRDM atomic mass excess in MeV
-   Emic : calculated FRDM microscopic energy in MeV
-   beta2: calculated quadrupole deformation of the nuclear ground-state
-   beta3: calculated octupole deformation of the nuclear ground-state
-   beta4: calculated hexadecapole deformation of the nuclear ground-state
-   beta6: calculated hexacontatetrapole deformation of the nuclear
-          ground-state
-
-The corresponding FORTRAN format is (2i4,1x,a2,1x,i1,3f10.3,4f8.3)
-
-----------------
-part_frdm.asc:
-----------------
-Each of the two files starts with 4 header lines briefly
-summarizing the contents of the given columns. This is followed by
-entries sorted by charge and mass number of the isotope. Each
-table ends with the line "END OF TABLE".
-Each entry consists of 5 lines:
-1. Isotope (in standard notation);
-2. Charge number of isotope, mass number of isotope, ground state
-   spin of the isotope;
-3-5. Partition functions normalized to the g.s. spin;
-   Third line: Partition functions for the  temperatures (in 10^9 K):
-   0.01, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7;
-       Fourth line:  Partition functions for the temperatures (in 10^9 K):
-   0.8, 0.9, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5;
-       Fifth line: Partition functions for the temperatures (in 10^9 K):
-   4.0, 4.5, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0 .
-Information for the next isotope starts after the last partition
-function line.
-
->>>>>    PIA: ADDED partition functions and A,Z,s for n,p,d,T,3He
+reads in follwing files:
+"mass-frdm95.dat"
+with the ground state properties based 
+on the FRDM model Format
+PIA: ADDED partition functions and A,Z,s for n,p,d,T,3He
 """
 function read_part_frdm()
     table_string = open("$(@__DIR__)/../tables/part_frdm.asc", "r") do f
@@ -126,9 +79,11 @@ end
 """
     extract_partition_function()
 
-checks indentical charge and atomic numbers
-in mass_frdm and part_frdm.
-Interpolates ω(T)
+Returns N dimensional struct with given 
+physical quantities from input files.
+Checks for indentical charge number Z and atomic numbers A
+in "mass_frdm" and "part_frdm".
+Interpolates partition function ω(T).
 """
 function extract_partition_function()
     d1 = read_mass_frdm()
