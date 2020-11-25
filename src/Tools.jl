@@ -1,9 +1,9 @@
 """
     logsumexp(arr)
-
-max + log(sum(exp{arr - max}))
-instead of
-log(sum(exp(arr)))
+Useful for large exponents.
+Uses the trick:
+max(arr) + log(sum(exp{arr - max(arr)}))
+instead of log(sum(exp(arr)))
 """
 function logsumexp(arr)
     max = maximum(arr)
@@ -13,12 +13,13 @@ function logsumexp(arr)
 end
 
 
-#TODO: test this!!
+
 """
     MultiNewtonRaphson(x::Vector, T, rho, y, ap)
 
-[-7.0010491,-9.1]
-∂/∂xᵢ [f₁,...,fₙ] good guess: [-4.394094904641707, -12.915712928215058]
+Returns solution for proton and neutron chemical potentials.
+Jacobian computet with ForwardDiff but can be changed to analytic function
+df_nse_condition.
 """
 function MultiNewtonRaphson(x::Vector, T, rho, y, ap)
     zaehler = 0
