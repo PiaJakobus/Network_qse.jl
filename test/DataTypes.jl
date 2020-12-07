@@ -12,3 +12,10 @@
     @test t1.ω(2) == 4
     @test h.ω(2.0) == 4.0
 end
+
+@testset "ThermoProperties" begin
+    @test 1 == 1
+end 
+@testset "Func" begin
+    @test 1 == 1
+end

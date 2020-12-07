@@ -5,9 +5,10 @@ end
 @testset "MultiNewtonRaphson" begin
     a = Network_qse.extract_partition_function()
     x = Network_qse.initial_guess(a)
-    sol = Network_qse.MultiNewtonRaphson(x, 9e9, 1e7, 0.49, a)
-    @test round(sum(Network_qse.x_i(sol, 9e9, 1e7, a)), digits = 1) ≈ 1.0
-    @test Network_qse.MultiNewtonRaphson([-9.2,-9.3], 9e9, 1e7, 0.5, a) ≠ NaN
+    th = Network_qse.ThermoProperties(9e9, 1e7, 0.49, -5.0)
+    sol = Network_qse.MultiNewtonRaphson(x, th, a)
+    @test round(sum(Network_qse.x_i(sol, th, a)), digits = 1) ≈ 1.0
+    @test Network_qse.MultiNewtonRaphson([-9.2,-9.3],th, a) ≠ NaN
 end
 
 @testset "inv_3x3" begin
