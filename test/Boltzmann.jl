@@ -39,3 +39,12 @@ end
     @test Network_qse.qse_condition(tmp, th, a)[1] ≈ Network_qse.nse_condition(tmp[1:2], th, a)[1]
     @test Network_qse.qse_condition(tmp, th, a)[2] ≈ Network_qse.nse_condition(tmp[1:2], th, a)[2]
 end
+
+
+@testset "x_i_QSE" begin
+    1 == 1
+end
+
+@testset "x_i" begin
+    1 == 1
+end

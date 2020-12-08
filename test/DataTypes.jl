@@ -15,7 +15,11 @@ end
 
 @testset "ThermoProperties" begin
     @test 1 == 1
-end 
+end
 @testset "Func" begin
+    @test 1 == 1
+end
+
+@testset "StepParameter" begin
     @test 1 == 1
 end

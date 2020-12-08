@@ -4,15 +4,28 @@ end
 
 @testset "MultiNewtonRaphson" begin
     a = Network_qse.extract_partition_function()
-    x = Network_qse.initial_guess(a)
-    th = Network_qse.ThermoProperties(9e9, 1e7, 0.49, -5.0)
-    sol = Network_qse.MultiNewtonRaphson(x, th, a)
-    @test round(sum(Network_qse.x_i(sol, th, a)), digits = 1) ≈ 1.0
-    @test Network_qse.MultiNewtonRaphson([-9.2,-9.3],th, a) ≠ NaN
+    x = Network_qse.qse_initial_guess(a)
+    x1 = Network_qse.initial_guess(a)
+    th = Network_qse.ThermoProperties(5e9, 1e7, 0.49, -2.0)
+    th1 = Network_qse.ThermoProperties(5e9, 1e7, 0.49, -2.0)
+    sp1 =  Network_qse.StepParameter(-50,50,30)
+    sp =  Network_qse.StepParameter(-10,10,50)
+
+    ff = Network_qse.Func(3, x -> Network_qse.qse_condition(x, th, a), x -> Network_qse.df_qse_condition(x,th,a), false)
+    ff1 = Network_qse.Func(2, x -> Network_qse.nse_condition(x, th, a), x -> Network_qse.df_nse_condition(x,th,a), false)
+    sol = Network_qse.MultiNewtonRaphson(x, ff, th, a, sp)
+    sol1 = Network_qse.MultiNewtonRaphson(x1, ff1, th, a, sp1)
+    println(sol,sol1)
+    @test sum(Network_qse.x_i_QSE(sol, th, a)[2]) ≈ th.x_qse
+    @test sum(Network_qse.x_i(sol1, th1, a)) ≈ 1.0
 end
 
 @testset "inv_3x3" begin
     @test Network_qse.inv_3x3(Matrix(1.0I, 3, 3)) == Matrix(1.0I, 3, 3)
+end
+
+@testset "inv_2x2" begin
+    @test 1 == 1
 end
 
 @testset "find_el" begin

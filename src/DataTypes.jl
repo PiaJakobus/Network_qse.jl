@@ -53,17 +53,19 @@ struct Func
     FD::Bool
     inv::Function
     Func(dims::Int, f::Function, df::Function, FD::Bool) =
-    new(dims, f, FD ? df = x -> ForwardDiff.jacobian(f, x) : df, FD, dims == 2 ? x -> inv_2x2(df(x)) : x -> inv_3x3(df(x)))
+    new(dims, f, FD ? df = x -> ForwardDiff.jacobian(f, x) : df, FD, if (dims == 2) x -> inv_2x2(df(x)) elseif (dims == 3) x -> inv_3x3(df(x)) else  x-> inv(df(x)) end)
 end
-Base.show(io::IO, ff::Func) = print(io, "$(ff.dims == 2 ? "f ∈ ℝ²" : "f ∈ ℝ³")")
+Base.show(io::IO, ff::Func) = print(io, "$(ff.dims == 2 ? "Rootfinding f ∈ ℝ²" : "f ∈ ℝ³"). AutoDiff is $(ff.FD ? "on" : "off")")
 
 
 """
     StepParameter
 Specifies min/max stepwidth and alpha parameter for Newton Raphson method
+Example: sp = Network_qse.StepParameter(-10,10,30)
 """
 struct StepParameter
     min::Float64
     max::Float64
     alpha::Float64
 end
+Base.show(io::IO, sp::StepParameter) = print(io, "min.(1, count/$(sp.alpha)) * max.(min.(inv * f, $(sp.max), $(sp.min))")

@@ -45,34 +45,8 @@ function MultiNewtonRaphson(x::Vector, func::Any, th::Any, ap::Any, props::Any)
     while abs(ϵ) > 1e-12
         f = func.f(x)
         inv = func.inv(x)
-        #x = x .- min.(1, zaehler/30) * max.(min.(inv * f, 50), -50)
-        #x = x .- min.(1, zaehler/50) * max.(min.(inv * f, 10), -10)
         x = x .- min.(1, zaehler/props.alpha) * max.(min.(inv * f, props.max), props.min)
-        println(x)
-        ϵ = sqrt(f[1]^2 + f[2]^2)
-        zaehler += 1
-    end
-    return x
-end
-
-
-"""
-    QSE_MultiNewtonRaphson(x::Vector, T, rho, y, ap)
-∂/∂xᵢ [f₁,...,fₙ]
-γ ≡ X_cl / X (mass fraction in heavy cluster (without units))
-"""
-function QSE_MultiNewtonRaphson(x::Vector, th::Any, ap::Any)
-    zaehler = 0
-    ϵ = 1.0
-    mu_nse = x[1:2]
-    while abs(ϵ) > 1e-8
-        df = Network_qse.df_qse_condition(x, th, ap)
-        scr = Network_qse.x_i_QSE(x, th, ap)
-        #df1 = ForwardDiff.jacobian(x -> qse_condition(x, th, ap), x)
-        f  = qse_condition(x, th, ap)
-        inv = inv_3x3(df)
-        x = x .- min.(1, zaehler/50) * max.(min.(inv * f, 10), -10)
-        ϵ = sqrt(f[1]^2 + f[2]^2 + f[3]^2)
+        ϵ = sqrt(sum(f.^2))
         zaehler += 1
     end
     return x
